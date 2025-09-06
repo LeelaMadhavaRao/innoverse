@@ -73,7 +73,7 @@ void main(){
     col.rgb+=(rand(gl_FragCoord.xy+uTime)-0.5)*uNoise;
     gl_FragColor=vec4(clamp(col.rgb,0.0,1.0),1.0);
 }
-`
+` // <--- this is the end of the fragment shader string
 
 type Props = {
   hueShift?: number
@@ -95,6 +95,7 @@ export default function DarkVeil({
   resolutionScale = 1,
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null)
+  const frameRef = useRef<number>(0)
 
   useEffect(() => {
     const canvas = ref.current as HTMLCanvasElement
@@ -141,7 +142,6 @@ export default function DarkVeil({
     resize()
 
     const start = performance.now()
-    let frame = 0
 
     const loop = () => {
       program.uniforms.uTime.value = ((performance.now() - start) / 1000) * speed
@@ -151,16 +151,24 @@ export default function DarkVeil({
       program.uniforms.uScanFreq.value = scanlineFrequency
       program.uniforms.uWarp.value = warpAmount
       renderer.render({ scene: mesh })
-      frame = requestAnimationFrame(loop)
+      frameRef.current = requestAnimationFrame(loop)
     }
 
     loop()
 
     return () => {
-      cancelAnimationFrame(frame)
+      cancelAnimationFrame(frameRef.current)
       window.removeEventListener("resize", resize)
     }
-  }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale])
+  }, [
+    hueShift,
+    noiseIntensity,
+    scanlineIntensity,
+    speed,
+    scanlineFrequency,
+    warpAmount,
+    resolutionScale,
+  ])
 
-  return <canvas ref={ref} className="w-full h-full block" style={{ background: "#0f172a" }} />
+  return <canvas ref={ref} className="block absolute top-0 left-0 w-full h-full" />
 }
