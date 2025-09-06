@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import DarkVeil from "@/components/dark-veil"
 
 interface PosterConfig {
   title: string
@@ -131,46 +132,37 @@ export default function PosterLaunchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-      {/* Background Stars */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 100 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              opacity: [0.3, 1, 0.3],
-              scale: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: Math.random() * 3 + 2,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
+    <div className="min-h-screen relative overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <DarkVeil
+          hueShift={120}
+          noiseIntensity={0.02}
+          scanlineIntensity={0.1}
+          speed={0.3}
+          scanlineFrequency={0.5}
+          warpAmount={0.2}
+          resolutionScale={0.8}
+        />
       </div>
 
       {/* Navigation */}
       <nav className="absolute top-6 left-6 z-40">
         <Link href="/">
-          <Button variant="ghost" className="text-white hover:bg-white/10">
+          <Button
+            variant="ghost"
+            className="text-white hover:bg-white/10 backdrop-blur-sm bg-black/20 border border-white/10"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
         </Link>
       </nav>
 
-      {/* Main Content */}
-      <div className="flex items-center justify-center min-h-screen p-6">
-        <div className="relative">
+      <div className="flex items-center justify-center min-h-screen p-2 md:p-4">
+        <div className="relative w-full max-w-4xl">
           {/* Poster Container */}
           <motion.div
-            className="relative w-80 h-96 md:w-96 md:h-[32rem] rounded-2xl overflow-hidden shadow-2xl"
+            className="relative w-full aspect-[3/4] max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl mx-auto"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -188,7 +180,7 @@ export default function PosterLaunchPage() {
             {/* Poster Content */}
             <div className="absolute bottom-6 left-6 right-6 text-white">
               <motion.h1
-                className="text-2xl md:text-3xl font-bold mb-2"
+                className="text-3xl md:text-5xl font-bold mb-4"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
@@ -196,7 +188,7 @@ export default function PosterLaunchPage() {
                 {posterConfig.title}
               </motion.h1>
               <motion.p
-                className="text-sm md:text-base opacity-90"
+                className="text-lg md:text-xl opacity-90"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.7, duration: 0.6 }}
@@ -246,13 +238,15 @@ export default function PosterLaunchPage() {
           {/* Waiting Message */}
           {showCurtains && (
             <motion.div
-              className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center"
+              className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
             >
-              <p className="text-white text-lg font-semibold">🎭 Waiting for the grand reveal...</p>
-              <p className="text-slate-300 text-sm mt-2">The poster will be launched by the admin</p>
+              <p className="text-white text-xl font-semibold backdrop-blur-sm bg-black/20 px-6 py-3 rounded-full border border-white/10">
+                🎭 Waiting for the grand reveal...
+              </p>
+              <p className="text-slate-300 text-base mt-2">The poster will be launched by the admin</p>
             </motion.div>
           )}
 
@@ -264,7 +258,9 @@ export default function PosterLaunchPage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 2, duration: 0.6 }}
             >
-              <p className="text-white text-lg font-semibold">🎉 Poster Launched Successfully!</p>
+              <p className="text-white text-xl font-semibold backdrop-blur-sm bg-black/20 px-6 py-3 rounded-full border border-white/10">
+                🎉 Poster Launched Successfully!
+              </p>
             </motion.div>
           )}
         </div>
@@ -276,7 +272,7 @@ export default function PosterLaunchPage() {
       {/* Spotlight Effect */}
       {!showCurtains && (
         <motion.div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none z-30"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 1 }}

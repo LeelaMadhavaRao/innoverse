@@ -106,6 +106,12 @@ export default function DarkVeil({
     })
 
     const gl = renderer.gl
+
+    if (!gl) {
+      console.warn("WebGL not supported, DarkVeil background will not render")
+      return
+    }
+
     const geometry = new Triangle(gl)
 
     const program = new Program(gl, {
@@ -156,5 +162,5 @@ export default function DarkVeil({
     }
   }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale])
 
-  return <canvas ref={ref} className="w-full h-full block" />
+  return <canvas ref={ref} className="w-full h-full block" style={{ background: "#0f172a" }} />
 }
