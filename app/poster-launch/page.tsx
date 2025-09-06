@@ -107,11 +107,9 @@ export default function PosterLaunchPage() {
         } else {
           setShowCurtains(true)
         }
-      } else {
-        console.error("Failed to fetch poster config - using default")
       }
     } catch (error) {
-      console.error("Network error fetching poster config - using default:", error)
+      // Default config is already set in useState
     } finally {
       setIsLoading(false)
     }
