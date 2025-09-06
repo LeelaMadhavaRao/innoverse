@@ -52,7 +52,12 @@ const Confetti = ({ isActive }: { isActive: boolean }) => {
 }
 
 export default function PosterLaunchPage() {
-  const [posterConfig, setPosterConfig] = useState<PosterConfig | null>(null)
+  const [posterConfig, setPosterConfig] = useState<PosterConfig>({
+    title: "Event Poster Reveal",
+    description: "Get ready for an amazing event experience!",
+    imageUrl: "/placeholder.svg?height=600&width=400&text=Event+Poster",
+    isLaunched: false,
+  })
   const [showCurtains, setShowCurtains] = useState(true)
   const [showConfetti, setShowConfetti] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -71,12 +76,12 @@ export default function PosterLaunchPage() {
         setShowCurtains(false)
         setShowConfetti(true)
         setTimeout(() => setShowConfetti(false), 3000)
-        setPosterConfig((prev) => (prev ? { ...prev, isLaunched: true } : null))
+        setPosterConfig((prev) => ({ ...prev, isLaunched: true }))
       } else if (data.type === "POSTER_RESET") {
         console.log("[v0] Poster reset via SSE")
         setShowCurtains(true)
         setShowConfetti(false)
-        setPosterConfig((prev) => (prev ? { ...prev, isLaunched: false } : null))
+        setPosterConfig((prev) => ({ ...prev, isLaunched: false }))
       }
     }
 
@@ -102,9 +107,11 @@ export default function PosterLaunchPage() {
         } else {
           setShowCurtains(true)
         }
+      } else {
+        console.error("Failed to fetch poster config - using default")
       }
     } catch (error) {
-      console.error("Failed to fetch poster config:", error)
+      console.error("Network error fetching poster config - using default:", error)
     } finally {
       setIsLoading(false)
     }
@@ -120,23 +127,6 @@ export default function PosterLaunchPage() {
             className="w-12 h-12 border-4 border-coral-500 border-t-transparent rounded-full mx-auto mb-4"
           />
           <p className="text-white text-lg">Loading poster...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!posterConfig) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Poster Not Found</h1>
-          <p className="text-slate-300 mb-6">The poster configuration could not be loaded.</p>
-          <Link href="/">
-            <Button variant="outline">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
         </div>
       </div>
     )
