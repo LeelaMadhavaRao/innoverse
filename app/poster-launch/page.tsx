@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Sparkles } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
 interface PosterConfig {
@@ -27,15 +27,15 @@ const Confetti = ({ isActive }: { isActive: boolean }) => {
               key={i}
               className="absolute w-2 h-2 bg-gradient-to-r from-coral-400 to-coral-600 rounded-full"
               initial={{
-                x: Math.random() * window.innerWidth,
+                x: typeof window !== "undefined" ? Math.random() * window.innerWidth : 0,
                 y: -10,
                 rotate: 0,
                 scale: Math.random() * 0.5 + 0.5,
               }}
               animate={{
-                y: window.innerHeight + 10,
+                y: typeof window !== "undefined" ? window.innerHeight + 10 : 800,
                 rotate: 360,
-                x: Math.random() * window.innerWidth,
+                x: typeof window !== "undefined" ? Math.random() * window.innerWidth : 0,
               }}
               exit={{ opacity: 0 }}
               transition={{
@@ -59,23 +59,48 @@ export default function PosterLaunchPage() {
 
   useEffect(() => {
     fetchPosterConfig()
+
+    const eventSource = new EventSource("/api/poster-launch/events")
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      console.log("[v0] Received SSE event:", data)
+
+      if (data.type === "POSTER_LAUNCHED") {
+        console.log("[v0] Poster launched via SSE")
+        setShowCurtains(false)
+        setShowConfetti(true)
+        setTimeout(() => setShowConfetti(false), 3000)
+        setPosterConfig((prev) => (prev ? { ...prev, isLaunched: true } : null))
+      } else if (data.type === "POSTER_RESET") {
+        console.log("[v0] Poster reset via SSE")
+        setShowCurtains(true)
+        setShowConfetti(false)
+        setPosterConfig((prev) => (prev ? { ...prev, isLaunched: false } : null))
+      }
+    }
+
+    eventSource.onerror = (error) => {
+      console.error("[v0] SSE connection error:", error)
+    }
+
+    return () => {
+      eventSource.close()
+    }
   }, [])
 
   const fetchPosterConfig = async () => {
     try {
-      const response = await fetch("/api/admin/poster-launch")
+      const response = await fetch("/api/poster-launch/config")
       if (response.ok) {
         const data = await response.json()
         setPosterConfig(data)
 
-        // If poster is launched, automatically open curtains after a delay
+        // Set initial state based on current poster status
         if (data?.isLaunched) {
-          setTimeout(() => {
-            setShowCurtains(false)
-            setShowConfetti(true)
-            // Stop confetti after 3 seconds
-            setTimeout(() => setShowConfetti(false), 3000)
-          }, 1000)
+          setShowCurtains(false)
+        } else {
+          setShowCurtains(true)
         }
       }
     } catch (error) {
@@ -83,12 +108,6 @@ export default function PosterLaunchPage() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleReveal = () => {
-    setShowCurtains(false)
-    setShowConfetti(true)
-    setTimeout(() => setShowConfetti(false), 3000)
   }
 
   if (isLoading) {
@@ -236,27 +255,21 @@ export default function PosterLaunchPage() {
             </AnimatePresence>
           </motion.div>
 
-          {/* Launch Button */}
-          {!posterConfig.isLaunched && showCurtains && (
+          {/* Waiting Message */}
+          {showCurtains && (
             <motion.div
-              className="absolute -bottom-20 left-1/2 transform -translate-x-1/2"
+              className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 text-center"
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
             >
-              <Button
-                onClick={handleReveal}
-                size="lg"
-                className="bg-gradient-to-r from-coral-500 to-coral-600 hover:from-coral-600 hover:to-coral-700 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Reveal Poster
-              </Button>
+              <p className="text-white text-lg font-semibold">🎭 Waiting for the grand reveal...</p>
+              <p className="text-slate-300 text-sm mt-2">The poster will be launched by the admin</p>
             </motion.div>
           )}
 
           {/* Status Message */}
-          {posterConfig.isLaunched && !showCurtains && (
+          {!showCurtains && (
             <motion.div
               className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center"
               initial={{ y: 20, opacity: 0 }}

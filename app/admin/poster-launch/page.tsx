@@ -112,7 +112,12 @@ export default function PosterLaunchPage() {
         setPosterConfig((prev) => ({ ...prev, isLaunched: true, launchDate: new Date() }))
         toast({
           title: "🎉 Poster Launched!",
-          description: "The poster has been launched successfully!",
+          description: "The poster has been launched successfully! Check the public page to see the curtains open.",
+        })
+        await fetch("/api/poster-launch/broadcast", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "POSTER_LAUNCHED" }),
         })
       } else {
         throw new Error("Failed to launch poster")
@@ -139,7 +144,12 @@ export default function PosterLaunchPage() {
         setPosterConfig((prev) => ({ ...prev, isLaunched: false, launchDate: undefined }))
         toast({
           title: "Poster Reset",
-          description: "The poster has been reset successfully!",
+          description: "The poster has been reset successfully! The curtains are now closed.",
+        })
+        await fetch("/api/poster-launch/broadcast", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "POSTER_RESET" }),
         })
       } else {
         throw new Error("Failed to reset poster")
