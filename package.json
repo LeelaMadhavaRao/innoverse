@@ -62,6 +62,7 @@
     "next": "15.2.4",
     "next-themes": "latest",
     "nodemailer": "latest",
+    "ogl": "latest",
     "react": "^19",
     "react-day-picker": "9.8.0",
     "react-dom": "^19",
