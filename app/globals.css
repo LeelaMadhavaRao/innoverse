@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated color tokens to match event management dark theme design brief */
+  --background: oklch(0.11 0 0); /* #1a1a1a Dark Gray */
+  --foreground: oklch(1 0 0); /* #ffffff White */
+  --card: oklch(0.85 0 0); /* #cfd8dc Light Gray */
+  --card-foreground: oklch(0.11 0 0); /* #1a1a1a Dark Gray */
+  --popover: oklch(0.72 0 0); /* #b0bec5 Medium Gray */
+  --popover-foreground: oklch(0.11 0 0); /* #1a1a1a Dark Gray */
+  --primary: oklch(0.62 0.19 27); /* #ff5722 Vibrant Coral */
+  --primary-foreground: oklch(1 0 0); /* #ffffff White */
+  --secondary: oklch(0.85 0 0); /* #cfd8dc Light Gray */
+  --secondary-foreground: oklch(0.11 0 0); /* #1a1a1a Dark Gray */
+  --muted: oklch(0.72 0 0); /* #b0bec5 Medium Gray */
+  --muted-foreground: oklch(0.11 0 0); /* #1a1a1a Dark Gray */
+  --accent: oklch(0.62 0.19 27); /* #ff5722 Vibrant Coral */
+  --accent-foreground: oklch(1 0 0); /* #ffffff White */
+  --destructive: oklch(0.55 0.22 27); /* #f44336 Red */
+  --destructive-foreground: oklch(1 0 0); /* #ffffff White */
+  --border: oklch(0.72 0 0); /* #b0bec5 Medium Gray */
+  --input: oklch(0.85 0 0); /* #cfd8dc Light Gray */
+  --ring: oklch(0.62 0.19 27 / 0.5); /* Coral ring effect */
+  --chart-1: oklch(0.88 0.08 27); /* #ffccbc Light Coral */
+  --chart-2: oklch(0.82 0.12 27); /* #ffab91 Medium Coral */
+  --chart-3: oklch(0.76 0.16 27); /* #ff8a65 Dark Coral */
+  --chart-4: oklch(0.62 0.19 27); /* #ff5722 Vibrant Coral */
+  --chart-5: oklch(0.58 0.22 27); /* #ff3d00 Bright Coral */
+  --radius: 0.5rem;
+  --sidebar: oklch(0.11 0 0); /* #1a1a1a Dark Gray */
+  --sidebar-foreground: oklch(1 0 0); /* #ffffff White */
+  --sidebar-primary: oklch(0.85 0 0); /* #cfd8dc Light Gray */
+  --sidebar-primary-foreground: oklch(0.11 0 0); /* #1a1a1a Dark Gray */
+  --sidebar-accent: oklch(0.62 0.19 27); /* #ff5722 Vibrant Coral */
+  --sidebar-accent-foreground: oklch(1 0 0); /* #ffffff White */
+  --sidebar-border: oklch(0.72 0 0); /* #b0bec5 Medium Gray */
+  --sidebar-ring: oklch(0.62 0.19 27 / 0.5); /* Coral ring effect */
+}
+
+.dark {
+  /* Dark mode uses the same tokens since this is primarily a dark theme app */
+  --background: oklch(0.11 0 0); /* #1a1a1a Dark Gray */
+  --foreground: oklch(1 0 0); /* #ffffff White */
+  --card: oklch(0.15 0 0); /* Slightly lighter dark for cards */
+  --card-foreground: oklch(1 0 0); /* #ffffff White */
+  --popover: oklch(0.15 0 0); /* Slightly lighter dark */
+  --popover-foreground: oklch(1 0 0); /* #ffffff White */
+  --primary: oklch(0.62 0.19 27); /* #ff5722 Vibrant Coral */
+  --primary-foreground: oklch(1 0 0); /* #ffffff White */
+  --secondary: oklch(0.2 0 0); /* Darker secondary */
+  --secondary-foreground: oklch(1 0 0); /* #ffffff White */
+  --muted: oklch(0.2 0 0); /* Darker muted */
+  --muted-foreground: oklch(0.72 0 0); /* Medium Gray */
+  --accent: oklch(0.62 0.19 27); /* #ff5722 Vibrant Coral */
+  --accent-foreground: oklch(1 0 0); /* #ffffff White */
+  --destructive: oklch(0.55 0.22 27); /* #f44336 Red */
+  --destructive-foreground: oklch(1 0 0); /* #ffffff White */
+  --border: oklch(0.2 0 0); /* Darker border */
+  --input: oklch(0.2 0 0); /* Darker input */
+  --ring: oklch(0.62 0.19 27 / 0.5); /* Coral ring effect */
+  --chart-1: oklch(0.88 0.08 27); /* #ffccbc Light Coral */
+  --chart-2: oklch(0.82 0.12 27); /* #ffab91 Medium Coral */
+  --chart-3: oklch(0.76 0.16 27); /* #ff8a65 Dark Coral */
+  --chart-4: oklch(0.62 0.19 27); /* #ff5722 Vibrant Coral */
+  --chart-5: oklch(0.58 0.22 27); /* #ff3d00 Bright Coral */
+  --sidebar: oklch(0.08 0 0); /* Even darker sidebar */
+  --sidebar-foreground: oklch(1 0 0); /* #ffffff White */
+  --sidebar-primary: oklch(0.62 0.19 27); /* #ff5722 Vibrant Coral */
+  --sidebar-primary-foreground: oklch(1 0 0); /* #ffffff White */
+  --sidebar-accent: oklch(0.2 0 0); /* Darker accent */
+  --sidebar-accent-foreground: oklch(1 0 0); /* #ffffff White */
+  --sidebar-border: oklch(0.2 0 0); /* Darker border */
+  --sidebar-ring: oklch(0.62 0.19 27 / 0.5); /* Coral ring effect */
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Added smooth animations for the event management app */
+  * {
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--muted);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
+}
+
+/* Added animation keyframes for poster launch and other effects */
+@keyframes curtain-open {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes curtain-open-right {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.curtain-left {
+  animation: curtain-open 2s ease-in-out forwards;
+}
+
+.curtain-right {
+  animation: curtain-open-right 2s ease-in-out forwards;
+}
+
+.confetti {
+  animation: confetti-fall 3s linear infinite;
+}
+
+.fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
