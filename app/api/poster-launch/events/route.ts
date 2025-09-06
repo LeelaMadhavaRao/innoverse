@@ -1,22 +1,20 @@
 import type { NextRequest } from "next/server"
-
-let clients: Array<{ id: string; controller: ReadableStreamDefaultController }> = []
+import { addClient, removeClient } from "@/lib/sse-clients"
 
 export async function GET(request: NextRequest) {
   const stream = new ReadableStream({
     start(controller) {
       const clientId = Math.random().toString(36).substring(7)
-      clients.push({ id: clientId, controller })
 
-      console.log(`[v0] SSE client connected: ${clientId}`)
+      // Add client to shared array
+      addClient({ id: clientId, controller })
 
       // Send initial connection message
       controller.enqueue(`data: ${JSON.stringify({ type: "CONNECTED", clientId })}\n\n`)
 
       // Cleanup on disconnect
       request.signal.addEventListener("abort", () => {
-        console.log(`[v0] SSE client disconnected: ${clientId}`)
-        clients = clients.filter((client) => client.id !== clientId)
+        removeClient(clientId)
         try {
           controller.close()
         } catch (error) {
