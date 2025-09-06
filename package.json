@@ -62,12 +62,8 @@
     "next": "15.2.4",
     "next-themes": "latest",
     "nodemailer": "latest",
-<<<<<<< HEAD
-    "react": "^18.3.1",
-=======
     "ogl": "latest",
-    "react": "^19",
->>>>>>> 1030c417498e4900587379a75b6998705e228043
+    "react": "^18.3.1",
     "react-day-picker": "9.8.0",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.60.0",
