@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import { useBackgroundMusic } from '../hooks/use-background-music';
+import { useDynamicBackgroundMusic } from '../hooks/use-dynamic-background-music';
 import { MusicControls } from './music-controls';
 
 function PosterLaunchDisplay() {
@@ -9,11 +10,11 @@ function PosterLaunchDisplay() {
   const [showPoster, setShowPoster] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
 
-  // Background music for Innoverse poster
-  const music = useBackgroundMusic('/innoverse.mp3', {
+  // Dynamic background music for posters
+  const music = useDynamicBackgroundMusic({
     autoPlay: false,
     loop: true,
-    volume: 0.3,
+    volume: 1.0,
     fadeInDuration: 2000,
     fadeOutDuration: 1000
   });
@@ -39,7 +40,30 @@ function PosterLaunchDisplay() {
       hods: ['Dr N. Gopi Krishna Murthy', 'Dr M. Suresh Babu'],
       faculty: ['Mr. P.S.V. Surya Kumar', 'Mr. N. Praveen', 'Mr. P. Manoj'],
       status: 'live',
-      priority: 'high'
+      priority: 'high',
+      musicFile: '/innoverse.mp3'
+    },
+    {
+      id: 'potluck-lunch-2025',
+      title: 'Potluck Lunch Event',
+      subtitle: 'Community Gathering',
+      description: 'Join us for a delightful potluck lunch event bringing together our community',
+      tagline: 'Share. Taste. Connect.',
+      date: 'SEPTEMBER 16 2K25',
+      organizer: 'STUDENT COMMUNITY',
+      theme: 'community-lunch',
+      colors: {
+        primary: '#F97316',
+        secondary: '#EAB308',
+        accent: '#DC2626',
+        background: 'linear-gradient(135deg, #fb923c 0%, #f59e0b 50%, #dc2626 100%)'
+      },
+      sponsors: ['Local Eateries', 'Campus Cafe', 'Student Union'],
+      hods: ['Student Council President'],
+      faculty: ['Event Coordinators'],
+      status: 'upcoming',
+      priority: 'medium',
+      musicFile: '/potluck.mp3'
     }
   ];
 
@@ -47,13 +71,14 @@ function PosterLaunchDisplay() {
     // Simulate receiving a poster launch notification
     const timer = setTimeout(() => {
       if (launchedPosters.length > 0) {
-        setActivePoster(launchedPosters[0]);
+        const poster = launchedPosters[0]; // or dynamically select based on event
+        setActivePoster(poster);
         setShowPoster(true);
         
-        // Start background music when poster appears
-        if (music.isLoaded) {
-          music.play();
-        }
+        // Start background music when poster appears with appropriate music file
+        const musicFile = poster.musicFile || '/innoverse.mp3';
+        music.play(musicFile);
+        console.log('🎵 Playing music for', poster.title, 'with file:', musicFile);
       }
     }, 2000);
 
@@ -64,14 +89,15 @@ function PosterLaunchDisplay() {
         music.stop();
       }
     };
-  }, [music.isLoaded]);
+  }, []);
 
-  // Auto-play music when audio is loaded and poster is showing
+  // Auto-play music when poster is showing and music isn't already playing
   useEffect(() => {
-    if (music.isLoaded && showPoster && activePoster && !music.isPlaying) {
-      music.play();
+    if (showPoster && activePoster && !music.isPlaying) {
+      const musicFile = activePoster.musicFile || '/innoverse.mp3';
+      music.play(musicFile);
     }
-  }, [music.isLoaded, showPoster, activePoster]);
+  }, [showPoster, activePoster]);
 
   const handleClose = () => {
     // Stop music when closing poster

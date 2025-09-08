@@ -29,6 +29,7 @@ function AdminGallery() {
   const fetchPhotos = async () => {
     try {
       const response = await galleryAPI.getAll();
+      console.log('Admin gallery response:', response.data);
       
       // Handle both new format (with photos array) and old format (direct array)
       const galleryData = response.data.photos || response.data || [];

@@ -19,6 +19,7 @@ function AdminSidebar({ isSidebarOpen, setIsSidebarOpen }) {
     { path: '/admin/emails', label: 'Email System', icon: '📧' },
     { path: '/admin/gallery', label: 'Event Gallery', icon: '🖼️' },
     { path: '/admin/poster-launch', label: 'Poster Launch', icon: '🚀' },
+    { path: '/admin/certificates', label: 'Merit Certificates', icon: '🏆' },
   ];
 
   const handleLogout = async () => {

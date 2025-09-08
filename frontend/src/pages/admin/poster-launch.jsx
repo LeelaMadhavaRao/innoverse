@@ -11,19 +11,37 @@ import { MusicControls } from '../../components/music-controls';
 
 function AdminPosterLaunch() {
   const [selectedPoster, setSelectedPoster] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [launchPhase, setLaunchPhase] = useState('selection'); // 'selection', 'blur', 'launching', 'curtains', 'display', 'success'
+  const [videoLaunchPhase, setVideoLaunchPhase] = useState('selection'); // 'selection', 'blur', 'launching', 'playing', 'success'
   const [launchedPosters, setLaunchedPosters] = useState([]);
+  const [launchedVideos, setLaunchedVideos] = useState([]);
   const [localLaunchedPosters, setLocalLaunchedPosters] = useState(new Set()); // Track locally launched posters
+  const [localLaunchedVideos, setLocalLaunchedVideos] = useState(new Set()); // Track locally launched videos
   const { addToast: toast } = useToast();
 
-  // Background music for poster launch
-  const music = useBackgroundMusic('/innoverse.mp3', {
+  // Separate music hooks for each poster type
+  const innoverseMusic = useBackgroundMusic('/innoverse.mp3', {
     autoPlay: false,
     loop: true,
-    volume: 0.25,
+    volume: 1.0,
     fadeInDuration: 2000,
     fadeOutDuration: 1500
   });
+
+  const potluckMusic = useBackgroundMusic('/potluck.mp3', {
+    autoPlay: false,
+    loop: true,
+    volume: 1.0,
+    fadeInDuration: 2000,
+    fadeOutDuration: 1500
+  });
+
+  // Get the current music handler based on selected poster
+  const getCurrentMusic = () => {
+    if (!selectedPoster) return innoverseMusic;
+    return selectedPoster.id === 'potluck-lunch-2025' ? potluckMusic : innoverseMusic;
+  };
 
   // Poster data with actual images
   const posters = [
@@ -51,8 +69,26 @@ function AdminPosterLaunch() {
     }
   ];
 
+  // Promotion video data
+  const promotionVideos = [
+    {
+      id: 'vikas-promotion-2025',
+      title: 'Vikas Promotion Video',
+      subtitle: 'Inspiring Success Story',
+      description: 'An inspiring promotion video showcasing innovation and excellence',
+      date: 'September 8, 2025',
+      organizer: 'Marketing Team',
+      videoUrl: '/vikas.mp4',
+      thumbnailUrl: '/vikas-thumbnail.jpg', // We'll use a default if this doesn't exist
+      duration: '2:30',
+      status: 'ready',
+      theme: 'promotion'
+    }
+  ];
+
   useEffect(() => {
     fetchLaunchedPosters();
+    fetchLaunchedVideos();
   }, []);
 
   const fetchLaunchedPosters = async () => {
@@ -61,6 +97,29 @@ function AdminPosterLaunch() {
       setLaunchedPosters(response.data || []);
     } catch (error) {
       console.error('❌ Error fetching launched posters:', error);
+    }
+  };
+
+  const fetchLaunchedVideos = async () => {
+    try {
+      console.log('📡 Fetching launched videos from API...');
+      const response = await adminAPI.getLaunchedVideos();
+      console.log('✅ Launched videos response:', response.data);
+      setLaunchedVideos(response.data || []);
+      
+      // Update local launched videos set for UI state
+      const videoIds = response.data?.map(v => v.videoId) || [];
+      setLocalLaunchedVideos(new Set(videoIds));
+    } catch (error) {
+      console.error('❌ Error fetching launched videos:', error);
+      // Fallback to localStorage if API fails
+      const savedVideos = localStorage.getItem('launchedVideos');
+      if (savedVideos) {
+        const videos = JSON.parse(savedVideos);
+        setLaunchedVideos(videos);
+        const videoIds = videos.map(v => v.videoId);
+        setLocalLaunchedVideos(new Set(videoIds));
+      }
     }
   };
 
@@ -95,11 +154,28 @@ function AdminPosterLaunch() {
 
     try {
       console.log('✅ Starting launch sequence...');
+      console.log('🎯 Selected Poster ID:', selectedPoster.id);
       
-      // Start background music for Innoverse poster during launch OR preview
-      if (selectedPoster.id === 'innoverse-2025' && music.isLoaded) {
+      // Get the appropriate music handler and start playing
+      const music = getCurrentMusic();
+      const musicType = selectedPoster.id === 'potluck-lunch-2025' ? 'Potluck' : 'Innoverse';
+      
+      console.log('🎵 Starting', musicType, 'music - isLoaded:', music.isLoaded);
+      
+      if (music.isLoaded) {
         music.play();
-        console.log('🎵 Background music started for Innoverse', isPreview ? 'preview' : 'launch');
+        console.log('🎵', musicType, 'background music started successfully');
+      } else {
+        console.log('⏳', musicType, 'music not loaded yet, will try again...');
+        // Try again after a short delay
+        setTimeout(() => {
+          if (music.isLoaded) {
+            music.play();
+            console.log('🎵', musicType, 'background music started after delay');
+          } else {
+            console.error('❌', musicType, 'music failed to load');
+          }
+        }, 500);
       }
       
       setLaunchPhase('launching');
@@ -166,11 +242,28 @@ function AdminPosterLaunch() {
     setSelectedPoster(null);
     setLaunchPhase('selection');
     
-    // Stop music when resetting
-    if (music.isPlaying) {
-      music.stop();
-      console.log('🎵 Background music stopped on reset');
+    // Stop all music when resetting
+    if (innoverseMusic.isPlaying) {
+      innoverseMusic.stop();
+      console.log('🎵 Innoverse background music stopped on reset');
     }
+    if (potluckMusic.isPlaying) {
+      potluckMusic.stop();
+      console.log('🎵 Potluck background music stopped on reset');
+    }
+    
+    // Also reset video state if needed
+    if (selectedVideo) {
+      resetVideoToSelection();
+    }
+    
+    // Force UI refresh to ensure cards are visible
+    setTimeout(() => {
+      fetchLaunchedPosters();
+      fetchLaunchedVideos();
+    }, 100);
+    
+    console.log('🔄 Reset to selection mode with UI refresh');
   };
 
   // Helper function to check if poster is already launched
@@ -179,22 +272,164 @@ function AdminPosterLaunch() {
            launchedPosters.some(launch => launch.posterData?.id === posterId || launch.posterId === posterId);
   };
 
+  // Helper function to check if video is already launched
+  const isVideoLaunched = (videoId) => {
+    return localLaunchedVideos.has(videoId) || 
+           launchedVideos.some(launch => launch.videoData?.id === videoId || launch.videoId === videoId);
+  };
+
+  // Video handling functions
+  const handleSelectVideo = (video) => {
+    console.log('🎬 Selecting video:', video);
+    
+    // Check if video has already been launched locally
+    if (localLaunchedVideos.has(video.id)) {
+      console.log('📱 Video already launched, showing display directly with effects');
+      setSelectedVideo(video);
+      setVideoLaunchPhase('playing');
+      return;
+    }
+    
+    setSelectedVideo(video);
+    setVideoLaunchPhase('blur');
+    console.log('📱 Video phase changed to blur');
+  };
+
+  const handleLaunchVideo = async () => {
+    console.log('🚀 Video launch button clicked, current phase:', videoLaunchPhase);
+    console.log('📝 Selected video:', selectedVideo);
+    
+    if (!selectedVideo || videoLaunchPhase !== 'blur') {
+      console.log('❌ Video launch prevented - video:', !!selectedVideo, 'phase:', videoLaunchPhase);
+      return;
+    }
+
+    const isPreview = isVideoLaunched(selectedVideo.id);
+    console.log('👁️ Is Video Preview Mode:', isPreview);
+
+    try {
+      console.log('✅ Starting video launch sequence...');
+      
+      setVideoLaunchPhase('launching');
+      console.log('📱 Video phase changed to launching');
+      
+      // First phase: launching animation (2 seconds)
+      console.log('⏱️ Starting 2-second video launch animation...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('✨ Video launch animation complete');
+      
+      // Second phase: video playing effect (3 seconds)
+      setVideoLaunchPhase('playing');
+      console.log('🎬 Video phase changed to playing');
+      console.log('⏱️ Starting 3-second video preview...');
+      
+      // Call API to launch video
+      const videoLaunchData = {
+        videoId: selectedVideo.id,
+        videoData: selectedVideo,
+        config: {
+          scheduledTime: new Date(),
+          displayDuration: 24,
+          targetAudience: 'all',
+          message: '',
+          priority: 'medium',
+          autoPlay: true,
+          volume: 1.0
+        }
+      };
+
+      const response = await adminAPI.launchVideo(videoLaunchData);
+      console.log('✅ Video launch API response:', response.data);
+      
+      // Add to locally launched videos for immediate UI update
+      setLocalLaunchedVideos(prev => new Set([...prev, selectedVideo.id]));
+      
+      // Refresh launched videos list
+      await fetchLaunchedVideos();
+      
+      // Wait for video preview
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      console.log('✨ Video preview complete');
+      
+      if (!isPreview) {
+        fetchLaunchedVideos();
+      }
+      
+    } catch (error) {
+      console.error('❌ Error launching video:', error);
+      toast({
+        title: isPreview ? 'Video Preview Failed' : 'Video Launch Failed',
+        description: isPreview ? 'Failed to preview video. Please try again.' : 'Failed to launch video. Please try again.',
+        type: 'destructive',
+      });
+      resetVideoToSelection();
+    }
+  };
+
+  const handleCloseVideoDisplay = async () => {
+    console.log('✨ User clicked video Save & Continue button');
+    
+    setVideoLaunchPhase('success');
+    console.log('📱 Video phase changed to success');
+    
+    // Refresh the launched videos data to update the UI
+    await fetchLaunchedVideos();
+    
+    // Reset video selection to go back to selection mode and refresh UI
+    setTimeout(() => {
+      resetVideoToSelection();
+      // Force a complete UI refresh by re-fetching all data
+      fetchLaunchedPosters();
+      fetchLaunchedVideos();
+      // Also reset any poster selection state to ensure clean UI
+      if (selectedPoster) {
+        resetToSelection();
+      }
+    }, 2000); // Allow success animation to play first
+  };
+
+  const resetVideoToSelection = () => {
+    setSelectedVideo(null);
+    setVideoLaunchPhase('selection');
+    console.log('🔄 Video selection reset to idle state');
+  };
+
   // Helper function to get button text based on launch status
   const getActionButtonText = (poster) => {
     return isPosterLaunched(poster.id) ? '👁️ Preview Poster' : '🚀 Launch Poster';
   };
 
-  const handleClosePosterDisplay = () => {
-    console.log('✨ User closed poster display');
+  // Helper function to get video button text based on launch status
+  const getVideoActionButtonText = (video) => {
+    return isVideoLaunched(video.id) ? '👁️ Preview Video' : '🎬 Launch Video';
+  };
+
+  const handleClosePosterDisplay = async () => {
+    console.log('✨ User clicked Save & Continue button');
     
-    // Stop music when user clicks Close & Continue
+    const music = getCurrentMusic();
+    const musicType = selectedPoster?.id === 'potluck-lunch-2025' ? 'Potluck' : 'Innoverse';
+    
+    console.log('🎵 Current music state - isPlaying:', music.isPlaying, 'type:', musicType);
+    
+    // Stop the appropriate music when user clicks Close & Continue
     if (music.isPlaying) {
       music.stop();
-      console.log('🎵 Background music stopped on Close & Continue');
+      console.log('🎵', musicType, 'background music stopped on Save & Continue button click');
+    } else {
+      console.log('🔇 No', musicType, 'music was playing when Save & Continue was clicked');
     }
     
     setLaunchPhase('success');
     console.log('📱 Phase changed to success');
+    
+    // Refresh the launched posters data to update the UI
+    await fetchLaunchedPosters();
+    
+    // Reset poster selection to go back to selection mode
+    setTimeout(() => {
+      resetToSelection();
+    }, 2000); // Allow success animation to play first
   };
 
   const handleResetLaunch = (posterId) => {
@@ -212,31 +447,41 @@ function AdminPosterLaunch() {
 
   const handleResetAllLaunches = async () => {
     try {
-      console.log('🔄 Starting bulk reset of all poster launches...');
+      console.log('🔄 Starting bulk reset of all poster and video launches...');
       
-      // Call the bulk reset API
-      const response = await adminAPI.resetAllPosterLaunches();
+      // Stop poster music when resetting
+      console.log('🎵 Stopping poster music during reset...');
+      innoverseMusic.stop();
+      potluckMusic.stop();
+      
+      // Call the combined reset API for both posters and videos
+      const response = await adminAPI.resetAllLaunches();
       
       console.log('✅ Bulk reset response:', response.data);
       
-      // Reset local state
+      // Reset local state for both posters and videos
       setLocalLaunchedPosters(new Set());
+      setLocalLaunchedVideos(new Set());
       
-      // Refresh the launched posters list to reflect changes
+      // Clear localStorage fallback
+      localStorage.removeItem('launchedVideos');
+      
+      // Refresh the launched lists to reflect changes
       await fetchLaunchedPosters();
+      await fetchLaunchedVideos();
       
       toast({
         title: 'All Launches Reset Successfully!',
-        description: `${response.data.resetCount} poster(s) have been reset and removed from the home page.`,
+        description: `${response.data.resetCount.posters} poster(s) and ${response.data.resetCount.videos} video(s) have been reset.`,
         type: 'success',
       });
       
-      console.log(`🎯 Reset complete: ${response.data.resetCount} posters reset`);
+      console.log(`🎯 Reset complete: ${response.data.resetCount.total} total items reset`);
     } catch (error) {
       console.error('❌ Error resetting all launches:', error);
       toast({
         title: 'Reset Failed',
-        description: error.response?.data?.message || 'Failed to reset poster launches. Please try again.',
+        description: error.response?.data?.message || 'Failed to reset launches. Please try again.',
         type: 'error',
       });
     }
@@ -310,12 +555,12 @@ function AdminPosterLaunch() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
       {/* Music Controls */}
       <MusicControls
-        isPlaying={music.isPlaying}
-        onPlay={music.play}
-        onPause={music.pause}
-        onStop={music.stop}
-        volume={music.currentVolume}
-        onVolumeChange={music.setVolume}
+        isPlaying={getCurrentMusic().isPlaying}
+        onPlay={getCurrentMusic().play}
+        onPause={getCurrentMusic().pause}
+        onStop={getCurrentMusic().stop}
+        volume={getCurrentMusic().currentVolume}
+        onVolumeChange={getCurrentMusic().setVolume}
         isVisible={true}
         position="top-right"
       />
@@ -374,7 +619,7 @@ function AdminPosterLaunch() {
             </p>
             
             {/* Reset All Launches Button */}
-            {(localLaunchedPosters.size > 0 || launchedPosters.length > 0) && (
+            {(localLaunchedPosters.size > 0 || launchedPosters.length > 0 || localLaunchedVideos.size > 0 || launchedVideos.length > 0) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -385,14 +630,55 @@ function AdminPosterLaunch() {
                   variant="outline"
                   className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 px-8 py-3"
                 >
-                  🔄 Reset All Launches ({Math.max(localLaunchedPosters.size, launchedPosters.length)})
+                  🔄 Reset All Launches ({Math.max(localLaunchedPosters.size, launchedPosters.length) + Math.max(localLaunchedVideos.size, launchedVideos.length)})
                 </Button>
               </motion.div>
             )}
+            
+            {/* Debug Music Test Controls */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <div className="flex gap-4 justify-center">
+                <Button
+                  onClick={() => {
+                    console.log('🎵 Testing Potluck Music - isLoaded:', potluckMusic.isLoaded);
+                    potluckMusic.play();
+                  }}
+                  variant="outline"
+                  className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 px-6 py-2"
+                >
+                  🍽️ Test Potluck Music
+                </Button>
+                <Button
+                  onClick={() => {
+                    console.log('🎵 Testing Innoverse Music - isLoaded:', innoverseMusic.isLoaded);
+                    innoverseMusic.play();
+                  }}
+                  variant="outline"
+                  className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 px-6 py-2"
+                >
+                  🚀 Test Innoverse Music
+                </Button>
+                <Button
+                  onClick={() => {
+                    potluckMusic.stop();
+                    innoverseMusic.stop();
+                    console.log('🔇 All music stopped');
+                  }}
+                  variant="outline"
+                  className="border-red-500/30 text-red-400 hover:bg-red-500/10 px-6 py-2"
+                >
+                  🔇 Stop All Music
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Only show poster selection when in 'selection' phase */}
-          {launchPhase === 'selection' && (
+          {launchPhase === 'selection' && videoLaunchPhase === 'selection' && (
             <>
               {/* Poster Selection Cards */}
               <motion.div variants={fadeInUp} className="mb-16">
@@ -490,6 +776,125 @@ function AdminPosterLaunch() {
                 </div>
               </motion.div>
 
+              {/* Promotion Video Selection Cards */}
+              <motion.div variants={fadeInUp} className="mb-16">
+                <h2 className="text-3xl font-bold text-white mb-8 text-center">
+                  Select Promotion Video to Launch
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                  {promotionVideos.map((video, index) => (
+                    <motion.div
+                      key={video.id}
+                      variants={fadeInUp}
+                      whileHover={{ 
+                        scale: 1.05,
+                        y: -10,
+                        transition: { duration: 0.3 }
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      className="group cursor-pointer"
+                      onClick={() => handleSelectVideo(video)}
+                    >
+                      <Card className="relative h-80 bg-white/5 backdrop-blur-md border-white/10 overflow-hidden hover:border-purple-400/50 transition-all duration-300">
+                        {/* Card Background - Video Thumbnail */}
+                        <div className="absolute inset-0">
+                          <video 
+                            src={video.videoUrl} 
+                            className="w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-300"
+                            muted
+                            loop
+                            onMouseEnter={(e) => e.target.play()}
+                            onMouseLeave={(e) => e.target.pause()}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        </div>
+
+                        {/* Card Content */}
+                        <div className="relative z-10 p-6 h-full flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between mb-4">
+                              <Badge className={`${
+                                localLaunchedVideos.has(video.id)
+                                  ? 'bg-green-600/20 text-green-400 border-green-500/30'
+                                  : video.theme === 'promotion' 
+                                    ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' 
+                                    : 'bg-blue-600/20 text-blue-400 border-blue-500/30'
+                              }`}>
+                                {localLaunchedVideos.has(video.id) ? 'Launched' : video.status}
+                              </Badge>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                className="text-2xl"
+                              >
+                                {localLaunchedVideos.has(video.id) ? '✅' : '🎬'}
+                              </motion.div>
+                            </div>
+                            
+                            <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
+                              {video.title}
+                            </h3>
+                            <p className="text-gray-300 mb-3 line-clamp-2">
+                              {video.description}
+                            </p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-purple-400 font-semibold">
+                                {video.date}
+                              </p>
+                              <p className="text-sm text-gray-400">
+                                Duration: {video.duration}
+                              </p>
+                            </div>
+                          </div>
+
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileHover={{ opacity: 1, y: 0 }}
+                            className="mt-4"
+                          >
+                            {isVideoLaunched(video.id) ? (
+                              <Button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSelectVideo(video); // Preview the video
+                                }}
+                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0"
+                              >
+                                👁️ Preview Video
+                              </Button>
+                            ) : (
+                              <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">
+                                🎬 Select & Launch
+                              </Button>
+                            )}
+                          </motion.div>
+                        </div>
+
+                        {/* Hover Effects */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        />
+                        
+                        {/* Play Icon Overlay */}
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          whileHover={{ scale: 1, opacity: 1 }}
+                          className="absolute inset-0 flex items-center justify-center"
+                        >
+                          <motion.div
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="w-16 h-16 bg-purple-600/80 backdrop-blur-md rounded-full flex items-center justify-center text-white text-2xl"
+                          >
+                            ▶️
+                          </motion.div>
+                        </motion.div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+
               {/* Active Campaigns */}
               {launchedPosters.length > 0 && (
                 <motion.div variants={fadeInUp} className="mb-8">
@@ -527,6 +932,73 @@ function AdminPosterLaunch() {
                             className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
                           >
                             ⏹️ Stop Campaign
+                          </Button>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Active Video Campaigns */}
+              {launchedVideos.length > 0 && (
+                <motion.div variants={fadeInUp} className="mb-8">
+                  <h2 className="text-3xl font-bold text-white mb-8 text-center">
+                    🎬 Active Video Campaigns
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                    {launchedVideos.map((launch, index) => (
+                      <motion.div
+                        key={launch._id || launch.id || `video-launch-${index}`}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="group"
+                      >
+                        <Card className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-md border-purple-500/30 p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white">{launch.videoData?.title}</h3>
+                            <div className="flex items-center gap-2">
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                                className="w-3 h-3 bg-purple-500 rounded-full"
+                              />
+                              <span className="text-sm text-purple-400 font-medium">Playing</span>
+                            </div>
+                          </div>
+                          
+                          <p className="text-gray-300 text-sm mb-4">
+                            Launched: {new Date(launch.launchedAt).toLocaleDateString()}
+                          </p>
+                          
+                          <Button
+                            onClick={() => {
+                              // Remove from localStorage
+                              const savedVideos = localStorage.getItem('launchedVideos') || '[]';
+                              const videos = JSON.parse(savedVideos);
+                              const filteredVideos = videos.filter(v => v.videoId !== launch.videoId);
+                              localStorage.setItem('launchedVideos', JSON.stringify(filteredVideos));
+                              
+                              // Remove from local state
+                              setLocalLaunchedVideos(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(launch.videoId);
+                                return newSet;
+                              });
+                              
+                              // Refresh list
+                              fetchLaunchedVideos();
+                              
+                              toast({
+                                title: 'Video Campaign Stopped',
+                                description: `${launch.videoData?.title} has been stopped.`,
+                                type: 'success',
+                              });
+                            }}
+                            variant="outline"
+                            className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
+                          >
+                            ⏹️ Stop Video
                           </Button>
                         </Card>
                       </motion.div>
@@ -1030,6 +1502,302 @@ function AdminPosterLaunch() {
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={handleClosePosterDisplay}
+                  className="absolute top-4 right-4 bg-white/10 backdrop-blur-md text-white rounded-full p-3 hover:bg-white/20 transition-all duration-200 z-20"
+                >
+                  ✕
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video Launch Modals */}
+      
+      {/* Blurred Video Modal with Launch Button */}
+      <AnimatePresence>
+        {(videoLaunchPhase === 'blur' || videoLaunchPhase === 'launching') && selectedVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) resetVideoToSelection();
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, rotateY: -90 }}
+              animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+              exit={{ scale: 0.8, opacity: 0, rotateY: 90 }}
+              transition={{ type: "spring", stiffness: 100, damping: 20 }}
+              className="relative max-w-4xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Blurred Video Background */}
+              <div className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-pink-900 rounded-3xl p-8 shadow-2xl overflow-hidden">
+                {/* Background Effects */}
+                <div className="absolute inset-0 overflow-hidden rounded-3xl">
+                  {[...Array(20)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 bg-purple-400 rounded-full opacity-20"
+                      animate={{
+                        x: [0, Math.random() * 300 - 150],
+                        y: [0, Math.random() * 400 - 200],
+                        scale: [0, 1, 0],
+                      }}
+                      transition={{
+                        duration: Math.random() * 3 + 2,
+                        repeat: Infinity,
+                        delay: Math.random() * 2,
+                      }}
+                      style={{
+                        left: Math.random() * 100 + '%',
+                        top: Math.random() * 100 + '%',
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Blurred Video Preview */}
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="relative z-10"
+                >
+                  <video 
+                    src={selectedVideo.videoUrl} 
+                    className="w-full h-auto max-h-[70vh] object-contain bg-white/5 backdrop-blur-sm filter blur-md"
+                    muted
+                    loop
+                    autoPlay
+                  />
+                  
+                  {/* Dark Overlay */}
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                  
+                  {/* Launch Button Overlay */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                  >
+                    {videoLaunchPhase === 'launching' ? (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="text-center"
+                      >
+                        <motion.div className="text-8xl mb-4">🎬</motion.div>
+                        <motion.h2
+                          className="text-6xl font-bold text-white mb-4 tracking-wide"
+                          style={{
+                            textShadow: '0 0 30px rgba(147, 51, 234, 0.8)',
+                          }}
+                          animate={{
+                            opacity: [0.8, 1, 0.8],
+                            scale: [1, 1.05, 1],
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          LAUNCHING
+                        </motion.h2>
+                        
+                        <motion.p
+                          className="text-xl text-purple-400 font-medium"
+                          animate={{
+                            opacity: [0.6, 1, 0.6],
+                          }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          Preparing spectacular video effects...
+                        </motion.p>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="text-center"
+                      >
+                        <Button
+                          onClick={handleLaunchVideo}
+                          disabled={videoLaunchPhase !== 'blur'}
+                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-16 py-6 text-2xl shadow-2xl border-0 relative overflow-hidden"
+                        >
+                          <div className="flex items-center gap-4">
+                            <motion.span
+                              animate={{ 
+                                scale: [1, 1.3, 1],
+                                rotate: [0, 15, -15, 0]
+                              }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                              className="text-3xl"
+                            >
+                              {isVideoLaunched(selectedVideo?.id) ? '👁️' : '🎬'}
+                            </motion.span>
+                            {getVideoActionButtonText(selectedVideo)}
+                          </div>
+                          
+                          {/* Button Glow Effect */}
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-purple-400/30 to-pink-400/30 blur-xl"
+                            animate={{
+                              opacity: [0, 1, 0],
+                              scale: [0.8, 1.2, 0.8],
+                            }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                          />
+                        </Button>
+                        
+                        <motion.p
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 1 }}
+                          className="text-gray-300 mt-6 text-lg"
+                        >
+                          Click to launch "{selectedVideo.title}" with spectacular effects!
+                        </motion.p>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                </motion.div>
+
+                {/* Close Button - Only show during blur phase */}
+                {videoLaunchPhase === 'blur' && (
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={resetVideoToSelection}
+                    className="absolute top-4 right-4 bg-white/10 backdrop-blur-md text-white rounded-full p-3 hover:bg-white/20 transition-all duration-200 z-20"
+                  >
+                    ✕
+                  </motion.button>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video Playing Effect */}
+      <AnimatePresence>
+        {videoLaunchPhase === 'playing' && selectedVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black z-50 flex items-center justify-center overflow-hidden"
+          >
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-black to-black" />
+            
+            {/* Spotlight Effects */}
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-32 h-96 bg-gradient-to-b from-purple-400/30 to-transparent"
+                initial={{ opacity: 0, rotate: -10 }}
+                animate={{ 
+                  opacity: [0, 0.8, 0],
+                  rotate: [-10, 10, -10],
+                  scaleY: [0.5, 1, 0.5]
+                }}
+                transition={{
+                  duration: 4,
+                  delay: i * 0.5,
+                  repeat: Infinity,
+                }}
+                style={{
+                  left: `${20 + i * 15}%`,
+                  top: '0%',
+                  transformOrigin: 'top center'
+                }}
+              />
+            ))}
+
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="relative max-w-5xl w-full"
+            >
+              {/* Video Display with Effects */}
+              <div className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-pink-900 rounded-3xl p-8 shadow-2xl">
+                {/* Particle Effects */}
+                <div className="absolute inset-0 overflow-hidden rounded-3xl">
+                  {[...Array(30)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{
+                        scale: [0, 1, 0],
+                        opacity: [0, 1, 0],
+                        x: [0, Math.random() * 600 - 300],
+                        y: [0, Math.random() * 800 - 400],
+                      }}
+                      transition={{
+                        duration: 4,
+                        delay: Math.random() * 2,
+                        repeat: Infinity,
+                      }}
+                      style={{
+                        left: Math.random() * 100 + '%',
+                        top: Math.random() * 100 + '%',
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Video Preview */}
+                <motion.video
+                  src={selectedVideo.videoUrl}
+                  className="w-full h-auto max-h-[70vh] object-contain rounded-xl shadow-2xl"
+                  autoPlay
+                  controls
+                  loop
+                  initial={{ rotateY: -90 }}
+                  animate={{ rotateY: 0 }}
+                  transition={{ 
+                    duration: 1.5,
+                    delay: 1,
+                    ease: "easeOut"
+                  }}
+                />
+
+                {/* Video Title Overlay */}
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 2 }}
+                  className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md rounded-xl p-4"
+                >
+                  <h3 className="text-2xl font-bold text-white mb-2">{selectedVideo.title}</h3>
+                  <p className="text-purple-300">{selectedVideo.subtitle}</p>
+                </motion.div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-center mt-8 gap-4">
+                  {/* Close Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleCloseVideoDisplay}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg"
+                  >
+                    {isVideoLaunched(selectedVideo.id) ? 
+                      '✨ Close Preview & Continue' : 
+                      '✨ Save & Continue'
+                    }
+                  </motion.button>
+                </div>
+
+                {/* Top Right Close Button */}
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={handleCloseVideoDisplay}
                   className="absolute top-4 right-4 bg-white/10 backdrop-blur-md text-white rounded-full p-3 hover:bg-white/20 transition-all duration-200 z-20"
                 >
                   ✕

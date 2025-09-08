@@ -14,11 +14,11 @@ import AdminEvaluations from './pages/admin/evaluations';
 import AdminEmails from './pages/admin/emails';
 import AdminGallery from './pages/admin/gallery';
 import AdminPosterLaunch from './pages/admin/poster-launch';
+import AdminCertificates from './pages/admin/certificates';
 
 // Team Components
 import TeamLayout from './components/team/team-layout';
 import TeamProfile from './pages/team/profile';
-import TeamGallery from './pages/team/gallery';
 import TeamResults from './pages/team/results';
 
 // Evaluator Components
@@ -87,6 +87,7 @@ function App() {
               <Route path="emails" element={<AdminEmails />} />
               <Route path="gallery" element={<AdminGallery />} />
               <Route path="poster-launch" element={<AdminPosterLaunch />} />
+              <Route path="certificates" element={<AdminCertificates />} />
             </Route>
 
             {/* Team Routes */}
@@ -100,7 +101,6 @@ function App() {
             >
               <Route index element={<Navigate to="profile" replace />} />
               <Route path="profile" element={<TeamProfile />} />
-              <Route path="gallery" element={<TeamGallery />} />
               <Route path="results" element={<TeamResults />} />
             </Route>
 

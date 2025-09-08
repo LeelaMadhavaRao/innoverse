@@ -14,17 +14,29 @@ function Home() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [launchedPosters, setLaunchedPosters] = useState([]);
+  const [launchedVideos, setLaunchedVideos] = useState([]);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedPoster, setSelectedPoster] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
   const [showPosterModal, setShowPosterModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [viewedPosters, setViewedPosters] = useState(new Set()); // Track viewed posters by IP
 
   // Background music for poster viewing
-  const music = useBackgroundMusic('/innoverse.mp3', {
+  const innoverseMusic = useBackgroundMusic('/innoverse.mp3', {
     autoPlay: false,
     loop: true,
-    volume: 0.3,
+    volume: 1.0,
+    fadeInDuration: 2000,
+    fadeOutDuration: 1000
+  });
+
+  // Background music for potluck poster viewing
+  const potluckMusic = useBackgroundMusic('/potluck.mp3', {
+    autoPlay: false,
+    loop: true,
+    volume: 1.0,
     fadeInDuration: 2000,
     fadeOutDuration: 1000
   });
@@ -56,87 +68,43 @@ function Home() {
     // Fetch events data
     const fetchEvents = async () => {
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-orpin.vercel.app/api';
-        console.log('Fetching events from:', `${apiBaseUrl}/poster-launch/events`);
-        
-        const response = await fetch(`${apiBaseUrl}/poster-launch/events`);
-        console.log('Events response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        const response = await fetch('/api/poster-launch/events');
         const data = await response.json();
-        console.log('Events data:', data);
-        
-        setEvents(Array.isArray(data) ? data : []);
+        setEvents(data);
       } catch (error) {
         console.error('Error fetching events:', error);
-        // Set default events on error
-        setEvents([
-          {
-            id: 1,
-            title: 'Event Information Loading',
-            date: new Date().toISOString(),
-            description: 'Event details will be updated soon'
-          }
-        ]);
       }
     };
 
-    // Fetch launched posters
+    // Fetch launched posters and videos
     const fetchLaunchedPosters = async () => {
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-orpin.vercel.app/api';
-        console.log('Fetching from:', `${apiBaseUrl}/poster-launch/public/launched`);
-        
-        const response = await fetch(`${apiBaseUrl}/poster-launch/public/launched`);
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        const response = await fetch('/api/poster-launch/public/launched');
         const data = await response.json();
-        console.log('Received data:', data);
-        
-        if (data.success && data.data) {
+        if (data.success) {
           setLaunchedPosters(data.data);
-        } else {
-          // If no posters are available, show sample/demo posters
-          setLaunchedPosters([
-            {
-              posterId: 'demo-1',
-              title: 'Welcome to Innoverse 2025',
-              subtitle: 'Innovation Awaits',
-              description: 'Join us for an exciting journey of innovation and entrepreneurship.',
-              imageUrl: '/team-photo-of-4-students-working-together.jpg',
-              theme: 'gradient-blue',
-              date: new Date().toISOString(),
-              organizer: 'Innoverse Team'
-            }
-          ]);
         }
       } catch (error) {
         console.error('Error fetching launched posters:', error);
-        // Set demo posters on error as well
-        setLaunchedPosters([
-          {
-            posterId: 'demo-1',
-            title: 'Welcome to Innoverse 2025',
-            subtitle: 'Innovation Awaits',
-            description: 'Join us for an exciting journey of innovation and entrepreneurship.',
-            imageUrl: '/team-photo-of-4-students-working-together.jpg',
-            theme: 'gradient-blue',
-            date: new Date().toISOString(),
-            organizer: 'Innoverse Team'
-          }
-        ]);
+      }
+    };
+
+    // Fetch launched videos
+    const fetchLaunchedVideos = async () => {
+      try {
+        const response = await fetch('/api/poster-launch/public/videos/launched');
+        const data = await response.json();
+        if (data.success) {
+          setLaunchedVideos(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching launched videos:', error);
       }
     };
 
     fetchEvents();
     fetchLaunchedPosters();
+    fetchLaunchedVideos();
   }, []);
 
   const scrollToSection = (sectionRef, sectionName) => {
@@ -197,13 +165,41 @@ function Home() {
     setSelectedPoster(poster);
     setShowPosterModal(true);
     
-    // Start music for Innoverse poster
-    if (poster.posterId === 'innoverse-2025' && music.isLoaded) {
-      music.play();
+    // Start appropriate music based on poster type
+    if (poster.posterId === 'innoverse-2025' && innoverseMusic.isLoaded) {
+      console.log('🎵 Starting Innoverse music for poster view');
+      innoverseMusic.play();
+    } else if (poster.posterId === 'potluck-lunch-2025' && potluckMusic.isLoaded) {
+      console.log('🎵 Starting Potluck music for poster view');
+      potluckMusic.play();
     }
     
     // Track view count
     handlePosterView(poster.posterId);
+  };
+
+  const handleViewVideo = async (video) => {
+    // Track view count for video
+    try {
+      await fetch(`/api/poster-launch/public/videos/launched/${video.videoId}/view`, {
+        method: 'PUT'
+      });
+      
+      // Update local state to reflect view count
+      setLaunchedVideos(prev => 
+        prev.map(v => 
+          v.videoId === video.videoId 
+            ? { ...v, analytics: { ...v.analytics, views: (v.analytics?.views || 0) + 1 } }
+            : v
+        )
+      );
+    } catch (error) {
+      console.error('Error tracking video view:', error);
+    }
+
+    // Show video in full-screen modal
+    setSelectedVideo(video);
+    setShowVideoModal(true);
   };
 
   const handleViewDetails = (poster) => {
@@ -216,9 +212,19 @@ function Home() {
     setSelectedPoster(null);
     
     // Stop music when closing poster
-    if (music.isPlaying) {
-      music.stop();
+    if (innoverseMusic.isPlaying) {
+      console.log('🛑 Stopping Innoverse music');
+      innoverseMusic.stop();
     }
+    if (potluckMusic.isPlaying) {
+      console.log('🛑 Stopping Potluck music');
+      potluckMusic.stop();
+    }
+  };
+
+  const handleCloseVideoModal = () => {
+    setShowVideoModal(false);
+    setSelectedVideo(null);
   };
 
   const handleCloseDetailsModal = () => {
@@ -290,7 +296,7 @@ function Home() {
             className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed text-gray-300"
           >
             Where innovative startup ideas come to life! Present your solutions with PPT, 
-            Lean Canvas models, and prototypes. Compete for certificates, momentums and recognition in our 
+            Lean Canvas models, and prototypes. Compete for glory and recognition in our 
             premier entrepreneurship event.
           </motion.p>
 
@@ -400,7 +406,7 @@ function Home() {
               { number: "10", label: "Teams", icon: "👥" },
               { number: "2", label: "Days", icon: "📅" },
               { number: "3", label: "Evaluators", icon: "🏆" },
-              { number: "Certificates", label: "& Momentums", icon: "🏅" }
+              { number: "₹50K", label: "Momentum Distribution", icon: "💰" }
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -528,9 +534,137 @@ function Home() {
         </section>
       )}
 
+      {/* Launched Videos Section */}
+      {launchedVideos.length > 0 && (
+        <section className="py-20 bg-gradient-to-br from-purple-900/20 via-gray-900 to-pink-900/20">
+          <div className="max-w-7xl mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                🎬 Live Promotion Videos
+              </h2>
+              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                Watch our latest promotion videos showcasing amazing achievements and stories
+              </p>
+            </motion.div>
+
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {launchedVideos.map((video, index) => (
+                <motion.div
+                  key={video._id || video.videoId}
+                  variants={fadeInUp}
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="group relative"
+                >
+                  <div className="bg-gradient-to-br from-purple-800/30 to-pink-800/30 backdrop-blur-lg rounded-3xl border border-purple-700/50 overflow-hidden shadow-2xl transition-all duration-300 group-hover:border-purple-400/70">
+                    {/* Video Preview */}
+                    <div className="relative h-48 overflow-hidden">
+                      <video 
+                        src={video.videoUrl} 
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        muted
+                        poster={video.thumbnailUrl}
+                        onMouseEnter={(e) => e.target.play()}
+                        onMouseLeave={(e) => e.target.pause()}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+                      
+                      {/* Play Button Overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          className="bg-purple-600/80 backdrop-blur-sm rounded-full p-4 shadow-lg border border-purple-400/50"
+                        >
+                          <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        </motion.div>
+                      </div>
+
+                      {/* View Count Badge */}
+                      <div className="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-600">
+                        <div className="flex items-center space-x-1 text-sm text-gray-300">
+                          <span>👁️</span>
+                          <span>{video.analytics?.views || 0}</span>
+                        </div>
+                      </div>
+
+                      {/* Live Badge */}
+                      <div className="absolute top-4 left-4">
+                        <motion.div
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="bg-purple-600/90 backdrop-blur-sm px-3 py-1 rounded-full border border-purple-500"
+                        >
+                          <div className="flex items-center space-x-1 text-sm text-white">
+                            <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                            <span>LIVE</span>
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Duration Badge */}
+                      {video.duration && (
+                        <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm px-2 py-1 rounded border border-gray-600">
+                          <span className="text-sm text-white">{video.duration}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Video Content */}
+                    <div className="p-6">
+                      <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
+                        {video.title}
+                      </h3>
+                      <p className="text-gray-400 mb-3 line-clamp-2">
+                        {video.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span className="flex items-center space-x-1">
+                          <span>📅</span>
+                          <span>{video.date}</span>
+                        </span>
+                        <span className="flex items-center space-x-1">
+                          <span>👥</span>
+                          <span>{video.organizer}</span>
+                        </span>
+                      </div>
+
+                      {/* Action Button */}
+                      <div className="flex space-x-3">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleViewVideo(video)}
+                          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300"
+                        >
+                          🎬 Watch Video
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       {/* Event Details Section */}
       <section ref={eventDetailsRef} className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">`
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -635,7 +769,7 @@ function Home() {
                 <div className="flex items-start">
                   <div className="w-3 h-3 bg-orange-400 rounded-full mt-2 mr-4 flex-shrink-0"></div>
                   <div>
-                    <p className="font-semibold text-white">Certificates & Momentums</p>
+                    <p className="font-semibold text-white">Awards Ceremony</p>
                     <p className="text-gray-400">Recognition for outstanding teams</p>
                   </div>
                 </div>
@@ -946,34 +1080,34 @@ function Home() {
               </div>
               
               <div>
-                <h4 className="text-xl font-semibold text-white mb-4">Recognition & Rewards</h4>
+                <h4 className="text-xl font-semibold text-white mb-4">Recognition Levels</h4>
                 <div className="space-y-3">
                   <div className="flex items-center p-3 bg-gradient-to-r from-yellow-600/20 to-yellow-500/20 rounded-xl">
-                    <span className="text-3xl mr-3">🏆</span>
+                    <span className="text-3xl mr-3">🥇</span>
                     <div>
-                      <div className="text-yellow-400 font-bold">Excellence Certificate</div>
-                      <div className="text-gray-400 text-sm">Outstanding performance</div>
+                      <div className="text-yellow-400 font-bold">1st Place</div>
+                      <div className="text-gray-400 text-sm">90+ points</div>
                     </div>
                   </div>
-                  <div className="flex items-center p-3 bg-gradient-to-r from-blue-600/20 to-blue-500/20 rounded-xl">
-                    <span className="text-3xl mr-3">🏅</span>
+                  <div className="flex items-center p-3 bg-gradient-to-r from-gray-400/20 to-gray-300/20 rounded-xl">
+                    <span className="text-3xl mr-3">🥈</span>
                     <div>
-                      <div className="text-blue-400 font-bold">Participation Certificate</div>
-                      <div className="text-gray-400 text-sm">For all participants</div>
+                      <div className="text-gray-300 font-bold">2nd Place</div>
+                      <div className="text-gray-400 text-sm">80+ points</div>
                     </div>
                   </div>
-                  <div className="flex items-center p-3 bg-gradient-to-r from-purple-600/20 to-purple-500/20 rounded-xl">
-                    <span className="text-3xl mr-3">🎖️</span>
+                  <div className="flex items-center p-3 bg-gradient-to-r from-orange-600/20 to-orange-500/20 rounded-xl">
+                    <span className="text-3xl mr-3">🥉</span>
                     <div>
-                      <div className="text-purple-400 font-bold">Innovation Momentum</div>
-                      <div className="text-gray-400 text-sm">Special recognition items</div>
+                      <div className="text-orange-400 font-bold">3rd Place</div>
+                      <div className="text-gray-400 text-sm">70+ points</div>
                     </div>
                   </div>
                   <div className="flex items-center p-3 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-xl">
-                    <span className="text-3xl mr-3">📜</span>
+                    <span className="text-3xl mr-3">🏆</span>
                     <div>
-                      <div className="text-emerald-400 font-bold">Digital Badges</div>
-                      <div className="text-gray-400 text-sm">LinkedIn & portfolio ready</div>
+                      <div className="text-emerald-400 font-bold">Special Recognition</div>
+                      <div className="text-gray-400 text-sm">Outstanding categories</div>
                     </div>
                   </div>
                 </div>
@@ -1114,13 +1248,37 @@ function Home() {
           >
             {/* Music Controls */}
             <MusicControls
-              isPlaying={music.isPlaying}
-              onPlay={music.play}
-              onPause={music.pause}
-              onStop={music.stop}
-              volume={music.currentVolume}
-              onVolumeChange={music.setVolume}
-              isVisible={selectedPoster.posterId === 'innoverse-2025'}
+              isPlaying={
+                selectedPoster.posterId === 'innoverse-2025' 
+                  ? innoverseMusic.isPlaying 
+                  : potluckMusic.isPlaying
+              }
+              onPlay={
+                selectedPoster.posterId === 'innoverse-2025' 
+                  ? innoverseMusic.play 
+                  : potluckMusic.play
+              }
+              onPause={
+                selectedPoster.posterId === 'innoverse-2025' 
+                  ? innoverseMusic.pause 
+                  : potluckMusic.pause
+              }
+              onStop={
+                selectedPoster.posterId === 'innoverse-2025' 
+                  ? innoverseMusic.stop 
+                  : potluckMusic.stop
+              }
+              volume={
+                selectedPoster.posterId === 'innoverse-2025' 
+                  ? innoverseMusic.currentVolume 
+                  : potluckMusic.currentVolume
+              }
+              onVolumeChange={
+                selectedPoster.posterId === 'innoverse-2025' 
+                  ? innoverseMusic.setVolume 
+                  : potluckMusic.setVolume
+              }
+              isVisible={true}
               position="top-left"
             />
 
@@ -1213,6 +1371,139 @@ function Home() {
                   ✨ Close & Continue
                 </motion.button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video Modal */}
+      <AnimatePresence>
+        {showVideoModal && selectedVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/95 backdrop-blur-lg z-50 flex items-center justify-center p-4"
+          >
+            {/* Close Button */}
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleCloseVideoModal}
+              className="absolute top-6 right-6 z-60 bg-white/10 backdrop-blur-sm text-white rounded-full p-3 hover:bg-white/20 transition-all duration-300 border border-white/20"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </motion.button>
+
+            {/* Video Container */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="relative w-full max-w-6xl max-h-[90vh] bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-md rounded-3xl border border-purple-500/30 overflow-hidden shadow-2xl"
+            >
+              {/* Background Effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-pink-600/10" />
+              
+              {/* Particle Effects */}
+              <div className="absolute inset-0 overflow-hidden">
+                {[...Array(20)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-purple-400/60 rounded-full"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{
+                      scale: [0, 1, 0],
+                      opacity: [0, 1, 0],
+                      x: [0, Math.random() * 400 - 200],
+                      y: [0, Math.random() * 300 - 150],
+                    }}
+                    transition={{
+                      duration: 3,
+                      delay: Math.random() * 2,
+                      repeat: Infinity,
+                    }}
+                    style={{
+                      left: Math.random() * 100 + '%',
+                      top: Math.random() * 100 + '%',
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Video Player */}
+              <div className="relative z-10 p-6">
+                <motion.video
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                  src={selectedVideo.videoUrl}
+                  className="w-full h-auto max-h-[70vh] rounded-2xl shadow-2xl"
+                  controls
+                  autoPlay
+                  poster={selectedVideo.thumbnailUrl}
+                />
+
+                {/* Video Info */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-6 text-center"
+                >
+                  <h2 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    {selectedVideo.title}
+                  </h2>
+                  <p className="text-lg text-purple-300 mb-3">
+                    {selectedVideo.subtitle}
+                  </p>
+                  <p className="text-gray-300 mb-4 max-w-2xl mx-auto">
+                    {selectedVideo.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-center space-x-6 text-sm text-gray-400">
+                    <span className="flex items-center space-x-1">
+                      <span>📅</span>
+                      <span>{selectedVideo.date}</span>
+                    </span>
+                    <span className="flex items-center space-x-1">
+                      <span>👥</span>
+                      <span>{selectedVideo.organizer}</span>
+                    </span>
+                    {selectedVideo.duration && (
+                      <span className="flex items-center space-x-1">
+                        <span>⏱️</span>
+                        <span>{selectedVideo.duration}</span>
+                      </span>
+                    )}
+                    <span className="flex items-center space-x-1">
+                      <span>👁️</span>
+                      <span>{selectedVideo.analytics?.views || 0} views</span>
+                    </span>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Bottom Close Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="p-6 text-center border-t border-purple-500/20"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleCloseVideoModal}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-3 rounded-xl transition-all duration-300 shadow-lg"
+                >
+                  ✨ Close Video
+                </motion.button>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}

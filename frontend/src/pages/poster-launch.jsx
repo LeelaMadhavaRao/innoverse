@@ -18,7 +18,7 @@ export default function PosterLaunch() {
   const music = useBackgroundMusic('/innoverse.mp3', {
     autoPlay: false,
     loop: true,
-    volume: 0.2,
+    volume: 1.0,
     fadeInDuration: 3000,
     fadeOutDuration: 2000
   });
@@ -26,8 +26,7 @@ export default function PosterLaunch() {
   useEffect(() => {
     fetchData();
     // Set up SSE connection for real-time updates
-    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-orpin.vercel.app/api';
-    const eventSource = new EventSource(`${apiBaseUrl}/poster-launch/events`);
+    const eventSource = new EventSource('/api/poster-launch/events');
     
     eventSource.onmessage = (event) => {
       const newEvent = JSON.parse(event.data);

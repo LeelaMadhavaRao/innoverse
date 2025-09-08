@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://innoverse-orpin.vercel.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -8,8 +8,6 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
-  timeout: 10000, // 10 second timeout
 });
 
 // Create public axios instance (no auth required)
@@ -18,20 +16,11 @@ const publicApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
-  timeout: 10000, // 10 second timeout
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    console.log('🚀 Making API request to:', config.baseURL + config.url);
-    console.log('🔧 Request config:', {
-      method: config.method,
-      headers: config.headers,
-      withCredentials: config.withCredentials
-    });
-    
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -39,26 +28,14 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor to handle common errors
 api.interceptors.response.use(
-  (response) => {
-    console.log('✅ API response received:', response.status);
-    return response;
-  },
+  (response) => response,
   (error) => {
-    console.error('❌ API response error:', error);
-    console.error('📄 Error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      headers: error.response?.headers
-    });
-    
     if (error.response?.status === 401) {
       // Handle unauthorized access
       localStorage.removeItem('token');
@@ -70,36 +47,7 @@ api.interceptors.response.use(
 
 // Auth API calls
 export const authAPI = {
-  login: async (credentials) => {
-    try {
-      console.log('🔄 Direct login attempt with fetch...');
-      
-      const response = await fetch('https://innoverse-orpin.vercel.app/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-        mode: 'cors', // Explicitly set CORS mode
-      });
-      
-      console.log('📡 Fetch response status:', response.status);
-      console.log('📡 Fetch response headers:', response.headers);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('✅ Fetch response data:', data);
-      
-      return { data };
-    } catch (error) {
-      console.error('❌ Fetch error:', error);
-      throw error;
-    }
-  },
+  login: (credentials) => api.post('/auth/login', credentials),
   logout: () => api.post('/auth/logout'),
   register: (userData) => api.post('/auth/register', userData),
 };
@@ -109,19 +57,17 @@ export const teamAPI = {
   getProfile: () => api.get('/team/profile'),
   updateProfile: (data) => api.put('/team/profile', data),
   getGallery: () => api.get('/team/gallery'),
-  getResults: () => api.get('/team/results'),
-  uploadToGallery: (formData) => api.post('/gallery', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+  uploadToGallery: (formData) => api.post('/gallery/team/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  getResults: () => api.get('/team/results'),
 };
 
 // Gallery API calls
 export const galleryAPI = {
   getAll: () => api.get('/gallery'),
   create: (data) => api.post('/gallery', data),
-  approve: (id) => api.post(`/gallery/${id}/approve`),
+  approve: (id) => api.put(`/gallery/${id}/approve`),
   delete: (id) => api.delete(`/gallery/${id}`),
 };
 
@@ -173,6 +119,17 @@ export const adminAPI = {
   stopPosterLaunch: (posterId) => api.delete(`/admin/poster-launch/launched/${posterId}`),
   updatePosterLaunch: (posterId, updateData) => api.put(`/admin/poster-launch/launched/${posterId}`, updateData),
   resetAllPosterLaunches: () => api.delete('/admin/poster-launch/reset-all'),
+  
+  // Video Launch
+  getPromotionVideos: () => api.get('/admin/video-launch/videos'),
+  launchVideo: (launchData) => api.post('/admin/video-launch/launch', launchData),
+  getLaunchedVideos: () => api.get('/admin/video-launch/launched'),
+  stopVideoLaunch: (videoId) => api.delete(`/admin/video-launch/launched/${videoId}`),
+  updateVideoLaunch: (videoId, updateData) => api.put(`/admin/video-launch/launched/${videoId}`, updateData),
+  resetAllVideoLaunches: () => api.delete('/admin/video-launch/reset-all'),
+  
+  // Combined Reset
+  resetAllLaunches: () => api.delete('/admin/reset-all-launches'),
 };
 
 // Faculty API calls
@@ -193,6 +150,14 @@ export const posterLaunchAPI = {
   // Public endpoints (no auth required)
   getPublicLaunchedPosters: () => publicApi.get('/poster-launch/public/launched'),
   incrementPosterView: (posterId) => publicApi.put(`/poster-launch/public/launched/${posterId}/view`),
+  
+  // Video public endpoints
+  getPublicLaunchedVideos: () => publicApi.get('/poster-launch/public/videos/launched'),
+  incrementVideoView: (videoId) => publicApi.put(`/poster-launch/public/videos/launched/${videoId}/view`),
+  addVideoWatchTime: (videoId, watchTime) => publicApi.put(`/poster-launch/public/videos/launched/${videoId}/watch-time`, { watchTime }),
+  
+  // Combined content endpoint
+  getAllPublicLaunchedContent: () => publicApi.get('/poster-launch/public/launched/all'),
 };
 
 export default api;

@@ -19,7 +19,7 @@ function TeamSidebar() {
             </Link>
           </li>
           <li>
-            <Link to="/team/gallery" className={isActive('/team/gallery') ? 'active' : ''}>
+            <Link to="/gallery" className={isActive('/gallery') ? 'active' : ''}>
               Gallery
             </Link>
           </li>

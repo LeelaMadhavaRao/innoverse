@@ -37,7 +37,7 @@ function AdminEvaluators() {
           experience: "15+ years",
           role: "external",
           status: "active",
-          teamsAssigned: 5,
+          teamsAssigned: 3,
           evaluationsCompleted: 3,
           createdAt: "2025-09-01"
         },
@@ -50,7 +50,7 @@ function AdminEvaluators() {
           experience: "12+ years",
           role: "internal",
           status: "active",
-          teamsAssigned: 4,
+          teamsAssigned: 3,
           evaluationsCompleted: 4,
           createdAt: "2025-09-02"
         }
@@ -123,7 +123,7 @@ function AdminEvaluators() {
         name: evaluatorData.name,
         email: evaluatorData.email,
         password: evaluatorData.password,
-        loginUrl: 'https://innoverse-n.vercel.app/login',
+        loginUrl: 'http://localhost:5173/login',
         organization: evaluatorData.evaluatorDetails.organization,
         expertise: evaluatorData.evaluatorDetails.expertise
       }

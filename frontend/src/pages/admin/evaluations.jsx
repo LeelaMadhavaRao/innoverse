@@ -103,12 +103,18 @@ function AdminEvaluations() {
 
   const fetchTeams = async () => {
     try {
-      // Mock teams data
+      // Mock teams data (updated to 10 teams total)
       const mockTeams = [
         { id: 1, name: "AI Innovators" },
         { id: 2, name: "EcoTech Solutions" },
         { id: 3, name: "HealthTech Warriors" },
-        { id: 4, name: "FinTech Pioneers" }
+        { id: 4, name: "FinTech Pioneers" },
+        { id: 5, name: "EdTech Creators" },
+        { id: 6, name: "AgriTech Innovators" },
+        { id: 7, name: "CleanTech Visionaries" },
+        { id: 8, name: "FoodTech Revolution" },
+        { id: 9, name: "SpaceTech Explorers" },
+        { id: 10, name: "CyberSec Guardians" }
       ];
       setTeams(mockTeams);
     } catch (error) {
@@ -118,7 +124,7 @@ function AdminEvaluations() {
 
   const fetchEvaluators = async () => {
     try {
-      // Mock evaluators data
+      // Mock evaluators data (updated to 3 evaluators total)
       const mockEvaluators = [
         { id: 1, name: "Dr. Arjun Patel" },
         { id: 2, name: "Prof. Kavita Singh" },

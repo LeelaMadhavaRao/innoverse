@@ -1,107 +1,64 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connectDB from './config/database.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { connectDB } from './config/db.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
-// Import routes directly
-import authRoutes from './routes/authRoutes.js';
-import adminRoutes from './routes/adminRoutes.js';
-import galleryRoutes from './routes/galleryRoutes.js';
-import teamRoutes from './routes/teamRoutes.js';
-import evaluationRoutes from './routes/evaluationRoutes.js';
-import posterLaunchRoutes from './routes/posterLaunchRoutes.js';
+// Get current directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-dotenv.config();
+// Load environment variables from the correct path
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
-// Connect to database
-connectDB();
+// Debug: Check if environment variables are loaded
+console.log('🔍 Environment variables check:');
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  PORT:', process.env.PORT);
+console.log('  EMAIL_HOST:', process.env.EMAIL_HOST);
+console.log('  EMAIL_USER:', process.env.EMAIL_USER);
+console.log('  EMAIL_PASS:', process.env.EMAIL_PASS ? '***SET***' : 'NOT SET');
 
+// Import routes
+import authRoutes from './routes/auth.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import evaluationRoutes from './routes/evaluation.routes.js';
+import galleryRoutes from './routes/gallery.routes.js';
+import teamRoutes from './routes/team.routes.js';
+import posterLaunchRoutes from './routes/posterLaunch.routes.js';
+
+// Initialize express
 const app = express();
 
-// CORS configuration
-const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://innoverse-n.vercel.app',
-    'https://innoverse-sigma.vercel.app',
-    'https://innoverse-orpin.vercel.app'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-app.use(cors(corsOptions));
+// Connect to MongoDB
+connectDB();
 
 // Middleware
-app.use(express.json({ limit: '10mb' }));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Innoverse Backend API',
-    status: 'Running',
-    timestamp: new Date().toISOString(),
-    version: '2.0.0',
-    structure: 'Refactored with direct imports'
-  });
-});
-
-app.get('/api', (req, res) => {
-  res.json({ 
-    message: 'Innoverse API v1.0',
-    endpoints: {
-      auth: '/api/auth',
-      admin: '/api/admin',
-      gallery: '/api/gallery',
-      team: '/api/team',
-      evaluations: '/api/evaluations',
-      posterLaunch: '/api/poster-launch'
-    }
-  });
-});
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/gallery', galleryRoutes);
 app.use('/api/team', teamRoutes);
-app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/poster-launch', posterLaunchRoutes);
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ 
-    message: 'Route not found',
-    availableRoutes: [
-      '/api/auth',
-      '/api/admin', 
-      '/api/gallery',
-      '/api/team',
-      '/api/evaluations',
-      '/api/poster-launch'
-    ]
-  });
-});
-
 // Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error'
-  });
-});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-// Only start server if not in Vercel environment
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-  });
-}
-
-export default app;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

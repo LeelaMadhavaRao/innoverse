@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://innoverse-orpin.vercel.app',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
     },

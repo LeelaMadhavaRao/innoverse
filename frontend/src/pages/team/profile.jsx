@@ -85,6 +85,7 @@ function TeamProfile() {
   const loadProfile = async () => {
     try {
       const response = await teamAPI.getProfile();
+      console.log('Profile response:', response.data);
       setProfile(response.data);
     } catch (err) {
       setError('Failed to load profile');
