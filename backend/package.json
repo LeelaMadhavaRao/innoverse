@@ -2,11 +2,11 @@
   "name": "innoverse-backend",
   "version": "1.0.0",
   "description": "Innoverse Backend API - Complete Admin Management System",
-  "main": "src/index.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "build": "echo 'No build step required'",
     "test": "jest",
     "create-admin": "node create-admin.js"
