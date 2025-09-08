@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
@@ -10,40 +9,48 @@ import { errorHandler } from './middleware/errorHandler.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables from the correct path
-dotenv.config({ path: path.join(__dirname, '../.env') });
+// Load environment variables (only for local development)
+if (process.env.NODE_ENV !== 'production') {
+  const dotenv = await import('dotenv');
+  dotenv.config({ path: path.join(__dirname, '../.env') });
+}
 
-// Debug: Check if environment variables are loaded (for deployment debugging)
-console.log('🔍 Environment variables check:');
+console.log('🔍 Environment check:');
 console.log('  NODE_ENV:', process.env.NODE_ENV);
 console.log('  MONGODB_URI:', process.env.MONGODB_URI ? '***SET***' : 'NOT SET');
 console.log('  JWT_SECRET:', process.env.JWT_SECRET ? '***SET***' : 'NOT SET');
 
-// Debug: Check if environment variables are loaded
-console.log('🔍 Environment variables check:');
-console.log('  NODE_ENV:', process.env.NODE_ENV);
-console.log('  PORT:', process.env.PORT);
-console.log('  EMAIL_HOST:', process.env.EMAIL_HOST);
-console.log('  EMAIL_USER:', process.env.EMAIL_USER);
-console.log('  EMAIL_PASS:', process.env.EMAIL_PASS ? '***SET***' : 'NOT SET');
+// Import routes with error handling
+let authRoutes, adminRoutes, evaluationRoutes, galleryRoutes, teamRoutes, posterLaunchRoutes;
 
-// Import routes
-import authRoutes from './routes/auth.routes.js';
-import adminRoutes from './routes/admin.routes.js';
-import evaluationRoutes from './routes/evaluation.routes.js';
-import galleryRoutes from './routes/gallery.routes.js';
-import teamRoutes from './routes/team.routes.js';
-import posterLaunchRoutes from './routes/posterLaunch.routes.js';
+try {
+  console.log('📦 Importing routes...');
+  authRoutes = (await import('./routes/auth.routes.js')).default;
+  adminRoutes = (await import('./routes/admin.routes.js')).default;
+  evaluationRoutes = (await import('./routes/evaluation.routes.js')).default;
+  galleryRoutes = (await import('./routes/gallery.routes.js')).default;
+  teamRoutes = (await import('./routes/team.routes.js')).default;
+  posterLaunchRoutes = (await import('./routes/posterLaunch.routes.js')).default;
+  console.log('✅ All routes imported successfully');
+} catch (error) {
+  console.error('❌ Error importing routes:', error);
+  throw error;
+}
 
 // Initialize express
 const app = express();
 
-// Connect to MongoDB (don't await at top level)
-connectDB().then(() => {
-  console.log('✅ Database connected successfully');
-}).catch((error) => {
-  console.error('❌ Database connection failed:', error);
-});
+// Connect to MongoDB (non-blocking)
+try {
+  connectDB().then(() => {
+    console.log('✅ Database connected successfully');
+  }).catch((error) => {
+    console.error('❌ Database connection failed:', error);
+    // Don't throw error - let server continue without DB for health checks
+  });
+} catch (error) {
+  console.error('❌ Database setup error:', error);
+}
 
 // Middleware
 const allowedOrigins = [
@@ -97,6 +104,12 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// For Vercel deployment
+export default app;
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
