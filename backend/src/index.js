@@ -13,6 +13,12 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from the correct path
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
+// Debug: Check if environment variables are loaded (for deployment debugging)
+console.log('🔍 Environment variables check:');
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  MONGODB_URI:', process.env.MONGODB_URI ? '***SET***' : 'NOT SET');
+console.log('  JWT_SECRET:', process.env.JWT_SECRET ? '***SET***' : 'NOT SET');
+
 // Debug: Check if environment variables are loaded
 console.log('🔍 Environment variables check:');
 console.log('  NODE_ENV:', process.env.NODE_ENV);
@@ -32,13 +38,51 @@ import posterLaunchRoutes from './routes/posterLaunch.routes.js';
 // Initialize express
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB (don't await at top level)
+connectDB().then(() => {
+  console.log('✅ Database connected successfully');
+}).catch((error) => {
+  console.error('❌ Database connection failed:', error);
+});
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.FRONTEND_URL,
+  'https://innoverse-frontend.vercel.app', // Add your frontend URL here when deployed
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from uploads directory
+// Note: In production (Vercel), files will be temporary. Use cloud storage for permanent files.
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Root route for health check
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Innoverse Backend API is running! 🚀',
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
