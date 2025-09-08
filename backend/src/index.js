@@ -24,38 +24,34 @@ console.log('  JWT_SECRET:', process.env.JWT_SECRET ? '***SET***' : 'NOT SET');
 const app = express();
 
 // Basic middleware first
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// CORS configuration
-const allowedOrigins = [
-  'https://innoverse-n.vercel.app',
-  'https://innoverse-sigma.vercel.app', // Your backend URL
-  process.env.FRONTEND_URL,
-  'http://localhost:5173', // For local development
-  'http://localhost:3000', // For local development
-  'http://localhost:5000', // For local development
-].filter(Boolean);
-
+// CORS configuration - simplified and more permissive
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman, curl)
-    if (!origin) return callback(null, true);
-    
-    // Allow all Vercel domains
-    if (origin.includes('.vercel.app')) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Blocked origin:', origin);
-      callback(null, true); // Allow all origins for now to debug
-    }
-  },
-  credentials: true
+  origin: [
+    'https://innoverse-n.vercel.app',
+    'https://innoverse-sigma.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:5000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With', 
+    'Content-Type',
+    'Accept',
+    'Authorization',
+    'Cache-Control',
+    'Pragma'
+  ],
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 }));
+
+// Handle preflight requests explicitly
+app.options('*', cors());
 
 // Health check route (must work even if other imports fail)
 app.get('/', (req, res) => {
@@ -90,6 +86,15 @@ app.get('/api/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
+  });
+});
+
+// CORS test endpoint
+app.get('/api/test-cors', (req, res) => {
+  res.json({
+    message: 'CORS is working!',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
   });
 });
 

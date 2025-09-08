@@ -8,6 +8,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
+  timeout: 10000, // 10 second timeout
 });
 
 // Create public axios instance (no auth required)
@@ -16,11 +18,20 @@ const publicApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
+  timeout: 10000, // 10 second timeout
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
+    console.log('🚀 Making API request to:', config.baseURL + config.url);
+    console.log('🔧 Request config:', {
+      method: config.method,
+      headers: config.headers,
+      withCredentials: config.withCredentials
+    });
+    
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -28,14 +39,26 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor to handle common errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API response received:', response.status);
+    return response;
+  },
   (error) => {
+    console.error('❌ API response error:', error);
+    console.error('📄 Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      headers: error.response?.headers
+    });
+    
     if (error.response?.status === 401) {
       // Handle unauthorized access
       localStorage.removeItem('token');
