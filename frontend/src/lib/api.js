@@ -70,7 +70,36 @@ api.interceptors.response.use(
 
 // Auth API calls
 export const authAPI = {
-  login: (credentials) => api.post('/auth/login', credentials),
+  login: async (credentials) => {
+    try {
+      console.log('🔄 Direct login attempt with fetch...');
+      
+      const response = await fetch('https://innoverse-sigma.vercel.app/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+        mode: 'cors', // Explicitly set CORS mode
+      });
+      
+      console.log('📡 Fetch response status:', response.status);
+      console.log('📡 Fetch response headers:', response.headers);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Fetch response data:', data);
+      
+      return { data };
+    } catch (error) {
+      console.error('❌ Fetch error:', error);
+      throw error;
+    }
+  },
   logout: () => api.post('/auth/logout'),
   register: (userData) => api.post('/auth/register', userData),
 };
