@@ -110,6 +110,11 @@ export const teamAPI = {
   updateProfile: (data) => api.put('/team/profile', data),
   getGallery: () => api.get('/team/gallery'),
   getResults: () => api.get('/team/results'),
+  uploadToGallery: (formData) => api.post('/gallery', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
 };
 
 // Gallery API calls

@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "innoverse-backend",
   "builds": [
     {
       "src": "index.js",
@@ -16,5 +17,11 @@
     "index.js": {
       "maxDuration": 30
     }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "github": {
+    "autoAlias": false
   }
 }
