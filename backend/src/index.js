@@ -43,7 +43,9 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Innoverse Backend API',
     status: 'Running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    version: '2.0.0',
+    structure: 'Refactored with direct imports'
   });
 });
 
