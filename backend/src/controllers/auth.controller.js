@@ -8,25 +8,69 @@ import User from '../models/user.model.js';
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
+  console.log('\n🔐 === PASSWORD VERIFICATION DEBUG ===');
+  console.log('📧 Login attempt for email:', email);
+  console.log('🔑 User input password:', password);
+  console.log('🔑 Password length:', password ? password.length : 0);
+
   const user = await User.findOne({ email });
 
-  if (user && (await user.matchPassword(password))) {
-    const token = generateToken(user._id);
-    const userData = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    };
+  if (user) {
+    console.log('👤 User found in database:', user.name);
+    console.log('🔒 Stored password hash:', user.password);
+    console.log('🔒 Hash length:', user.password ? user.password.length : 0);
+    console.log('👥 User role:', user.role);
+    console.log('✅ Team leader status:', user.isTeamLeader || false);
     
-    res.json({
-      token,
-      user: userData
-    });
+    // Check if user has team credentials
+    if (user.role === 'team') {
+      const Team = (await import('../models/team.model.js')).default;
+      const team = await Team.findOne({ 'teamLeader.email': email });
+      if (team && team.credentials) {
+        console.log('👥 Team found:', team.teamName);
+        console.log('🔑 Team stored password:', team.credentials.password);
+        console.log('📧 Team stored username:', team.credentials.username);
+        console.log('🔍 Password comparison:');
+        console.log('   Input password:', password);
+        console.log('   Team password:', team.credentials.password);
+        console.log('   Passwords match:', password === team.credentials.password);
+      } else {
+        console.log('❌ No team found or no team credentials');
+      }
+    }
+    
+    console.log('🔍 Starting bcrypt password verification...');
+    const passwordMatch = await user.matchPassword(password);
+    console.log('✅ Bcrypt verification result:', passwordMatch);
+    
+    if (passwordMatch) {
+      console.log('🎉 Login successful for:', user.name);
+      const token = generateToken(user._id);
+      const userData = {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      };
+      
+      res.json({
+        token,
+        user: userData
+      });
+    } else {
+      console.log('❌ Password verification failed for:', user.name);
+      console.log('❌ Input password:', password);
+      console.log('❌ Stored hash:', user.password);
+      res.status(401);
+      throw new Error('Invalid email or password');
+    }
   } else {
+    console.log('❌ No user found with email:', email);
     res.status(401);
     throw new Error('Invalid email or password');
   }
+  
+  console.log('🔐 === END PASSWORD VERIFICATION DEBUG ===\n');
 });
 
 // @desc    Register a new user

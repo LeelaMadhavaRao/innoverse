@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/error-boundary';
-import PosterLaunchDisplay from './components/poster-launch-display';
 
 // Admin Components
 import AdminLayout from './components/admin/admin-layout';
@@ -137,9 +136,6 @@ function App() {
               }
             />
           </Routes>
-          
-          {/* Global Poster Launch Display */}
-          <PosterLaunchDisplay />
           
           <Toaster />
           </ThemeProvider>

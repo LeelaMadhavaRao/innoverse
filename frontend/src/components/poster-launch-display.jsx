@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
+import { useBackgroundMusic } from '../hooks/use-background-music';
+import { MusicControls } from './music-controls';
 
 function PosterLaunchDisplay() {
   const [activePoster, setActivePoster] = useState(null);
   const [showPoster, setShowPoster] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+
+  // Background music for Innoverse poster
+  const music = useBackgroundMusic('/innoverse.mp3', {
+    autoPlay: false,
+    loop: true,
+    volume: 0.3,
+    fadeInDuration: 2000,
+    fadeOutDuration: 1000
+  });
 
   // Mock data - in real implementation, this would come from API
   const launchedPosters = [
@@ -38,19 +49,48 @@ function PosterLaunchDisplay() {
       if (launchedPosters.length > 0) {
         setActivePoster(launchedPosters[0]);
         setShowPoster(true);
+        
+        // Start background music when poster appears
+        if (music.isLoaded) {
+          music.play();
+        }
       }
     }, 2000);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(timer);
+      // Stop music when component unmounts
+      if (music.isPlaying) {
+        music.stop();
+      }
+    };
+  }, [music.isLoaded]);
+
+  // Auto-play music when audio is loaded and poster is showing
+  useEffect(() => {
+    if (music.isLoaded && showPoster && activePoster && !music.isPlaying) {
+      music.play();
+    }
+  }, [music.isLoaded, showPoster, activePoster]);
 
   const handleClose = () => {
+    // Stop music when closing poster
+    if (music.isPlaying) {
+      music.stop();
+    }
     setShowPoster(false);
     setActivePoster(null);
   };
 
   const handleMinimize = () => {
     setIsMinimized(!isMinimized);
+    
+    // If minimizing, pause music; if expanding, resume music
+    if (!isMinimized) {
+      music.pause();
+    } else {
+      music.resume();
+    }
   };
 
   if (!activePoster || !showPoster) return null;
@@ -320,6 +360,19 @@ function PosterLaunchDisplay() {
                 transition={{ duration: 3, repeat: Infinity }}
               />
             </motion.div>
+
+            {/* Music Controls */}
+            <MusicControls
+              isPlaying={music.isPlaying}
+              onPlay={music.play}
+              onPause={music.pause}
+              onStop={music.stop}
+              volume={music.currentVolume}
+              onVolumeChange={music.setVolume}
+              isVisible={showPoster && !isMinimized}
+              position="top-left"
+              className="absolute top-4 left-4"
+            />
 
             {/* Launch Notification */}
             <motion.div

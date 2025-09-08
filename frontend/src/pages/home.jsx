@@ -1,19 +1,37 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../context/auth-context';
+import { useBackgroundMusic } from '../hooks/use-background-music';
+import { MusicControls } from '../components/music-controls';
+import Navigation from '../components/navigation';
 
 function Home() {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
+  const [launchedPosters, setLaunchedPosters] = useState([]);
   const [activeSection, setActiveSection] = useState('home');
+  const [selectedPoster, setSelectedPoster] = useState(null);
+  const [showPosterModal, setShowPosterModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [viewedPosters, setViewedPosters] = useState(new Set()); // Track viewed posters by IP
+
+  // Background music for poster viewing
+  const music = useBackgroundMusic('/innoverse.mp3', {
+    autoPlay: false,
+    loop: true,
+    volume: 0.3,
+    fadeInDuration: 2000,
+    fadeOutDuration: 1000
+  });
 
   // Refs for sections
   const homeRef = useRef(null);
+  const postersRef = useRef(null);
   const eventDetailsRef = useRef(null);
   const teamStructureRef = useRef(null);
   const evaluationRef = useRef(null);
@@ -35,26 +53,6 @@ function Home() {
   };
 
   useEffect(() => {
-    // Redirect authenticated users to their respective dashboards
-    if (isAuthenticated && user) {
-      switch(user.role) {
-        case 'admin':
-          navigate('/admin');
-          return;
-        case 'team':
-          navigate('/team');
-          return;
-        case 'evaluator':
-          navigate('/evaluator');
-          return;
-        case 'faculty':
-          navigate('/faculty');
-          return;
-        default:
-          break;
-      }
-    }
-
     // Fetch events data
     const fetchEvents = async () => {
       try {
@@ -66,8 +64,22 @@ function Home() {
       }
     };
 
+    // Fetch launched posters
+    const fetchLaunchedPosters = async () => {
+      try {
+        const response = await fetch('/api/poster-launch/public/launched');
+        const data = await response.json();
+        if (data.success) {
+          setLaunchedPosters(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching launched posters:', error);
+      }
+    };
+
     fetchEvents();
-  }, [isAuthenticated, user, navigate]);
+    fetchLaunchedPosters();
+  }, []);
 
   const scrollToSection = (sectionRef, sectionName) => {
     setActiveSection(sectionName);
@@ -93,89 +105,75 @@ function Home() {
     }
   };
 
+  const handlePosterView = async (posterId) => {
+    // Only increment view count once per IP address
+    if (viewedPosters.has(posterId)) {
+      console.log('Poster already viewed from this IP, skipping count increment');
+      return;
+    }
+
+    try {
+      await fetch(`/api/poster-launch/public/launched/${posterId}/view`, {
+        method: 'PUT'
+      });
+      
+      // Mark this poster as viewed from this IP
+      setViewedPosters(prev => new Set([...prev, posterId]));
+      
+      // Update local state to reflect view count
+      setLaunchedPosters(prev => 
+        prev.map(poster => 
+          poster.posterId === posterId 
+            ? { ...poster, analytics: { ...poster.analytics, views: poster.analytics.views + 1 } }
+            : poster
+        )
+      );
+      
+      console.log('View count incremented for poster:', posterId);
+    } catch (error) {
+      console.error('Error tracking poster view:', error);
+    }
+  };
+
+  const handleViewPoster = (poster) => {
+    setSelectedPoster(poster);
+    setShowPosterModal(true);
+    
+    // Start music for Innoverse poster
+    if (poster.posterId === 'innoverse-2025' && music.isLoaded) {
+      music.play();
+    }
+    
+    // Track view count
+    handlePosterView(poster.posterId);
+  };
+
+  const handleViewDetails = (poster) => {
+    setSelectedPoster(poster);
+    setShowDetailsModal(true);
+  };
+
+  const handleClosePosterModal = () => {
+    setShowPosterModal(false);
+    setSelectedPoster(null);
+    
+    // Stop music when closing poster
+    if (music.isPlaying) {
+      music.stop();
+    }
+  };
+
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedPoster(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white overflow-x-hidden">
-      {/* Enhanced Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800">
-        <div className="px-4 py-4 mx-auto max-w-7xl lg:px-8">
-          <div className="flex items-center justify-between">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center space-x-2"
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xl">I</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                Innoverse 2025
-              </span>
-            </motion.div>
-            
-            <div className="hidden md:flex items-center space-x-8">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => scrollToSection(homeRef, 'home')}
-                className={`transition-colors ${activeSection === 'home' ? 'text-emerald-400' : 'text-gray-300 hover:text-white'}`}
-              >
-                🏠 Home
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => scrollToSection(eventDetailsRef, 'event-details')}
-                className={`transition-colors ${activeSection === 'event-details' ? 'text-emerald-400' : 'text-gray-300 hover:text-white'}`}
-              >
-                📅 Event Details
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => scrollToSection(teamStructureRef, 'team-structure')}
-                className={`transition-colors ${activeSection === 'team-structure' ? 'text-emerald-400' : 'text-gray-300 hover:text-white'}`}
-              >
-                👥 Team Structure
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => scrollToSection(evaluationRef, 'evaluation')}
-                className={`transition-colors ${activeSection === 'evaluation' ? 'text-emerald-400' : 'text-gray-300 hover:text-white'}`}
-              >
-                🏆 Evaluation Criteria
-              </motion.button>
-            </div>
-
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center space-x-4"
-            >
-              {!isAuthenticated ? (
-                <Link to="/login">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg">
-                      Login
-                    </Button>
-                  </motion.div>
-                </Link>
-              ) : (
-                <Link to={getStartedLink()}>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
-                      Dashboard
-                    </Button>
-                  </motion.div>
-                </Link>
-              )}
-            </motion.div>
-          </div>
-        </div>
-      </nav>
-
+      {/* Universal Navigation */}
+      <Navigation />
       {/* Hero Section */}
-      <section ref={homeRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section ref={homeRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-teal-900/30 to-cyan-900/30"></div>
@@ -231,35 +229,108 @@ function Home() {
           
           <motion.p 
             variants={fadeInUp}
-            className="text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed text-gray-300"
+            className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed text-gray-300"
           >
             Where innovative startup ideas come to life! Present your solutions with PPT, 
             Lean Canvas models, and prototypes. Compete for glory and recognition in our 
             premier entrepreneurship event.
           </motion.p>
+
+          {/* Role-specific Welcome Message */}
+          {isAuthenticated && user && (
+            <motion.div
+              variants={fadeInUp}
+              className="mb-8 p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 backdrop-blur-lg rounded-2xl border border-purple-500/20 max-w-2xl mx-auto"
+            >
+              <h3 className="text-2xl font-semibold mb-2 text-purple-400">
+                Welcome back, {user.name}! 👋
+              </h3>
+              <p className="text-gray-300">
+                {user.role === 'admin' && "Manage the platform and launch exciting poster campaigns."}
+                {user.role === 'team' && "Submit your innovative ideas and track your progress."}
+                {user.role === 'evaluator' && "Evaluate teams and contribute to their success."}
+                {user.role === 'faculty' && "Guide and mentor the next generation of innovators."}
+              </p>
+            </motion.div>
+          )}
           
           <motion.div 
             variants={fadeInUp}
             className="flex flex-col sm:flex-row gap-6 justify-center"
           >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
-                size="lg"
-                onClick={() => scrollToSection(eventDetailsRef, 'event-details')}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-10 py-4 text-xl shadow-2xl"
-              >
-                Explore Event
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button 
-                variant="outline"
-                size="lg"
-                className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/10 px-10 py-4 text-xl backdrop-blur-sm"
-              >
-                View Gallery
-              </Button>
-            </motion.div>
+            {!isAuthenticated ? (
+              <>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    size="lg"
+                    onClick={() => scrollToSection(eventDetailsRef, 'event-details')}
+                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-10 py-4 text-xl shadow-2xl"
+                  >
+                    🚀 Explore Event
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link to="/gallery">
+                    <Button 
+                      variant="outline"
+                      size="lg"
+                      className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/10 px-10 py-4 text-xl backdrop-blur-sm"
+                    >
+                      🖼️ View Gallery
+                    </Button>
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link to="/login">
+                    <Button 
+                      size="lg"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-10 py-4 text-xl shadow-2xl"
+                    >
+                      🔐 Get Started
+                    </Button>
+                  </Link>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link to={getStartedLink()}>
+                    <Button 
+                      size="lg"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-10 py-4 text-xl shadow-2xl"
+                    >
+                      📊 {user.role === 'admin' ? 'Admin Dashboard' : 
+                           user.role === 'team' ? 'Team Dashboard' : 
+                           user.role === 'evaluator' ? 'Evaluator Portal' : 
+                           'Faculty Portal'}
+                    </Button>
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link to="/gallery">
+                    <Button 
+                      variant="outline"
+                      size="lg"
+                      className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/10 px-10 py-4 text-xl backdrop-blur-sm"
+                    >
+                      🖼️ View Gallery
+                    </Button>
+                  </Link>
+                </motion.div>
+                {user.role === 'admin' && (
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Link to="/admin/poster-launch">
+                      <Button 
+                        size="lg"
+                        className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-10 py-4 text-xl shadow-2xl"
+                      >
+                        🚀 Launch Posters
+                      </Button>
+                    </Link>
+                  </motion.div>
+                )}
+              </>
+            )}
           </motion.div>
 
           {/* Floating Stats */}
@@ -287,6 +358,117 @@ function Home() {
           </motion.div>
         </motion.div>
       </section>
+
+      {/* Launched Posters Section */}
+      {launchedPosters.length > 0 && (
+        <section ref={postersRef} className="py-20 bg-gradient-to-br from-gray-800 via-slate-900 to-gray-800">
+          <div className="max-w-7xl mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                🚀 Launched Posters
+              </h2>
+              <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                Discover the exciting events and announcements that are currently live
+              </p>
+            </motion.div>
+
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {launchedPosters.map((poster, index) => (
+                <motion.div
+                  key={poster._id || poster.posterId}
+                  variants={fadeInUp}
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="group relative"
+                >
+                  <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg rounded-3xl border border-gray-700/50 overflow-hidden shadow-2xl transition-all duration-300 group-hover:border-purple-500/50">
+                    {/* Poster Image */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={poster.imageUrl || '/placeholder.jpg'} 
+                        alt={poster.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+                      
+                      {/* View Count Badge */}
+                      <div className="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-600">
+                        <div className="flex items-center space-x-1 text-sm text-gray-300">
+                          <span>👁️</span>
+                          <span>{poster.analytics?.views || 0}</span>
+                        </div>
+                      </div>
+
+                      {/* Live Badge */}
+                      <div className="absolute top-4 left-4">
+                        <motion.div
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="bg-red-600/90 backdrop-blur-sm px-3 py-1 rounded-full border border-red-500"
+                        >
+                          <div className="flex items-center space-x-1 text-sm text-white">
+                            <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                            <span>LIVE</span>
+                          </div>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    {/* Poster Content */}
+                    <div className="p-6">
+                      <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">
+                        {poster.title}
+                      </h3>
+                      <p className="text-gray-400 mb-3 line-clamp-2">
+                        {poster.description}
+                      </p>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm text-gray-500">
+                          {poster.organizer}
+                        </span>
+                        <span className="text-sm text-purple-400">
+                          {new Date(poster.launchedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-3">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleViewDetails(poster)}
+                          className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300"
+                        >
+                          📋 View Details
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleViewPoster(poster)}
+                          className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300"
+                        >
+                          🚀 View Poster
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Event Details Section */}
       <section ref={eventDetailsRef} className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -861,6 +1043,224 @@ function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Poster Modal */}
+      <AnimatePresence>
+        {showPosterModal && selectedPoster && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          >
+            {/* Music Controls */}
+            <MusicControls
+              isPlaying={music.isPlaying}
+              onPlay={music.play}
+              onPause={music.pause}
+              onStop={music.stop}
+              volume={music.currentVolume}
+              onVolumeChange={music.setVolume}
+              isVisible={selectedPoster.posterId === 'innoverse-2025'}
+              position="top-left"
+            />
+
+            {/* Poster Display */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="relative max-w-4xl w-full max-h-[90vh] bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg rounded-3xl border border-gray-700/50 overflow-hidden shadow-2xl"
+            >
+              {/* Close Button */}
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleClosePosterModal}
+                className="absolute top-4 right-4 bg-red-600/80 backdrop-blur-sm text-white rounded-full p-3 hover:bg-red-700/80 transition-all duration-200 z-20"
+              >
+                ✕
+              </motion.button>
+
+              {/* Poster Content */}
+              <div className="p-8 text-center">
+                {/* Header */}
+                <motion.div
+                  initial={{ y: -30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-6"
+                >
+                  <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    {selectedPoster.title}
+                  </h1>
+                  <p className="text-xl text-gray-400">{selectedPoster.subtitle}</p>
+                </motion.div>
+
+                {/* Poster Image */}
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="mb-6"
+                >
+                  <img 
+                    src={selectedPoster.imageUrl || '/placeholder.jpg'} 
+                    alt={selectedPoster.title}
+                    className="w-full max-h-[60vh] object-contain mx-auto rounded-2xl shadow-2xl"
+                  />
+                </motion.div>
+
+                {/* Description */}
+                <motion.div
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="mb-6"
+                >
+                  <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+                    {selectedPoster.description}
+                  </p>
+                </motion.div>
+
+                {/* Event Info */}
+                <motion.div
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="flex flex-wrap justify-center gap-4 mb-8"
+                >
+                  <div className="bg-gray-800/50 px-4 py-2 rounded-xl border border-gray-600">
+                    <span className="text-purple-400 font-semibold">📅 {selectedPoster.date}</span>
+                  </div>
+                  <div className="bg-gray-800/50 px-4 py-2 rounded-xl border border-gray-600">
+                    <span className="text-purple-400 font-semibold">🏢 {selectedPoster.organizer}</span>
+                  </div>
+                  <div className="bg-gray-800/50 px-4 py-2 rounded-xl border border-gray-600">
+                    <span className="text-purple-400 font-semibold">👁️ {selectedPoster.analytics?.views || 0} views</span>
+                  </div>
+                </motion.div>
+
+                {/* Close Button */}
+                <motion.button
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 1.0 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleClosePosterModal}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300"
+                >
+                  ✨ Close & Continue
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Details Modal */}
+      <AnimatePresence>
+        {showDetailsModal && selectedPoster && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-2xl w-full max-h-[80vh] bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-lg rounded-2xl border border-gray-700/50 overflow-hidden shadow-2xl"
+            >
+              {/* Close Button */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleCloseDetailsModal}
+                className="absolute top-4 right-4 bg-gray-700/80 backdrop-blur-sm text-white rounded-full p-2 hover:bg-gray-600/80 transition-all duration-200 z-20"
+              >
+                ✕
+              </motion.button>
+
+              {/* Details Content */}
+              <div className="p-8">
+                <h2 className="text-3xl font-bold text-white mb-6 pr-12">
+                  📋 {selectedPoster.title} Details
+                </h2>
+
+                <div className="space-y-6 text-gray-300">
+                  {/* Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-800/50 p-4 rounded-xl">
+                      <h3 className="text-purple-400 font-semibold mb-2">📅 Event Date</h3>
+                      <p>{selectedPoster.date}</p>
+                    </div>
+                    <div className="bg-gray-800/50 p-4 rounded-xl">
+                      <h3 className="text-purple-400 font-semibold mb-2">🏢 Organizer</h3>
+                      <p>{selectedPoster.organizer}</p>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="bg-gray-800/50 p-4 rounded-xl">
+                    <h3 className="text-purple-400 font-semibold mb-2">📝 Description</h3>
+                    <p className="text-gray-300 leading-relaxed">{selectedPoster.description}</p>
+                  </div>
+
+                  {/* Analytics */}
+                  <div className="bg-gray-800/50 p-4 rounded-xl">
+                    <h3 className="text-purple-400 font-semibold mb-2">📊 Analytics</h3>
+                    <div className="flex gap-4">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-2">👁️</span>
+                        <span>{selectedPoster.analytics?.views || 0} views</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-2">📅</span>
+                        <span>Launched {new Date(selectedPoster.launchedAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="bg-gray-800/50 p-4 rounded-xl">
+                    <h3 className="text-purple-400 font-semibold mb-2">🔥 Status</h3>
+                    <div className="flex items-center">
+                      <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-2"></span>
+                      <span className="text-green-400 font-semibold">LIVE</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 mt-8">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      handleCloseDetailsModal();
+                      handleViewPoster(selectedPoster);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300"
+                  >
+                    🚀 View Poster
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleCloseDetailsModal}
+                    className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300"
+                  >
+                    Close
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

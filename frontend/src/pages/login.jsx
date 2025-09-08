@@ -74,30 +74,9 @@ function Login() {
     try {
       const result = await login(formData);
       if (result.success) {
-        // Get user from auth context after login
-        const userData = JSON.parse(localStorage.getItem('user'));
-        if (userData) {
-          // Redirect based on user role
-          switch(userData.role) {
-            case 'admin':
-              navigate('/admin');
-              break;
-            case 'team':
-              navigate('/team');
-              break;
-            case 'evaluator':
-              navigate('/evaluator');
-              break;
-            case 'faculty':
-              navigate('/faculty');
-              break;
-            default:
-              navigate('/');
-              break;
-          }
-        } else {
-          navigate('/');
-        }
+        // Redirect all users to home page after successful login
+        // They can navigate to their dashboards from there
+        navigate('/');
       } else {
         setError(result.error);
       }

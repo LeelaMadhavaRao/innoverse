@@ -32,7 +32,8 @@ import {
   launchPoster,
   getLaunchedPosters,
   stopPosterLaunch,
-  updatePosterLaunch
+  updatePosterLaunch,
+  resetAllPosterLaunches
 } from '../controllers/admin.controller.js';
 
 const router = express.Router();
@@ -86,6 +87,9 @@ router.route('/poster-launch/launch')
 
 router.route('/poster-launch/launched')
   .get(getLaunchedPosters);
+
+router.route('/poster-launch/reset-all')
+  .delete(resetAllPosterLaunches);
 
 router.route('/poster-launch/launched/:id')
   .delete(stopPosterLaunch)

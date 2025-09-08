@@ -10,6 +10,14 @@ const api = axios.create({
   },
 });
 
+// Create public axios instance (no auth required)
+const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
@@ -107,6 +115,7 @@ export const adminAPI = {
   getLaunchedPosters: () => api.get('/admin/poster-launch/launched'),
   stopPosterLaunch: (posterId) => api.delete(`/admin/poster-launch/launched/${posterId}`),
   updatePosterLaunch: (posterId, updateData) => api.put(`/admin/poster-launch/launched/${posterId}`, updateData),
+  resetAllPosterLaunches: () => api.delete('/admin/poster-launch/reset-all'),
 };
 
 // Faculty API calls
@@ -123,6 +132,10 @@ export const posterLaunchAPI = {
   updateConfig: (data) => api.put('/poster-launch/config', data),
   broadcast: (message) => api.post('/poster-launch/broadcast', { message }),
   getEvents: () => api.get('/poster-launch/events'),
+  
+  // Public endpoints (no auth required)
+  getPublicLaunchedPosters: () => publicApi.get('/poster-launch/public/launched'),
+  incrementPosterView: (posterId) => publicApi.put(`/poster-launch/public/launched/${posterId}/view`),
 };
 
 export default api;

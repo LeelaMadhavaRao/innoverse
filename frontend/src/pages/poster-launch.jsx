@@ -5,12 +5,23 @@ import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useToast } from '../hooks/use-toast';
+import { useBackgroundMusic } from '../hooks/use-background-music';
+import { MusicControls } from '../components/music-controls';
 
 export default function PosterLaunch() {
   const [config, setConfig] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+
+  // Background music for poster launch page
+  const music = useBackgroundMusic('/innoverse.mp3', {
+    autoPlay: false,
+    loop: true,
+    volume: 0.2,
+    fadeInDuration: 3000,
+    fadeOutDuration: 2000
+  });
 
   useEffect(() => {
     fetchData();
@@ -22,10 +33,33 @@ export default function PosterLaunch() {
       setEvents((prev) => [newEvent, ...prev]);
     };
 
+    // Start background music when page loads and poster launch is active
+    const musicTimer = setTimeout(() => {
+      if (music.isLoaded && !loading) {
+        music.play();
+      }
+    }, 1000);
+
     return () => {
       eventSource.close();
+      clearTimeout(musicTimer);
+      if (music.isPlaying) {
+        music.stop();
+      }
     };
-  }, []);
+  }, [music.isLoaded, loading]);
+
+  // Auto-play music when page is loaded and ready
+  useEffect(() => {
+    if (music.isLoaded && !loading && config) {
+      const timer = setTimeout(() => {
+        if (!music.isPlaying) {
+          music.play();
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [music.isLoaded, loading, config]);
 
   const fetchData = async () => {
     try {
@@ -60,7 +94,19 @@ export default function PosterLaunch() {
   const isActive = config && new Date(config.startDate) <= new Date() && new Date() <= new Date(config.endDate);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-900 text-white relative">
+      {/* Music Controls */}
+      <MusicControls
+        isPlaying={music.isPlaying}
+        onPlay={music.play}
+        onPause={music.pause}
+        onStop={music.stop}
+        volume={music.currentVolume}
+        onVolumeChange={music.setVolume}
+        isVisible={!loading && config}
+        position="bottom-right"
+      />
+
       {/* Navigation */}
       <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">

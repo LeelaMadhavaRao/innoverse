@@ -3,13 +3,29 @@ import EmailTemplate from '../models/emailTemplate.model.js';
 
 class EmailService {
   constructor() {
+    console.log('🔧 Email service configuration:');
+    console.log('  HOST:', process.env.EMAIL_HOST);
+    console.log('  PORT:', process.env.EMAIL_PORT);
+    console.log('  USER:', process.env.EMAIL_USER);
+    console.log('  PASS:', process.env.EMAIL_PASS ? '***configured***' : 'NOT SET');
+    console.log('  PASS length:', process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0);
+    
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: 'gmail', // Use Gmail service directly
+      host: 'smtp.gmail.com', // Explicitly set Gmail SMTP
+      port: 587,
+      secure: false, // true for 465, false for other ports
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      // Additional Gmail-specific settings
+      tls: {
+        rejectUnauthorized: false
+      }
     });
+    
+    console.log('📧 Nodemailer transporter created successfully');
   }
 
   // Generic email sending method
@@ -249,4 +265,5 @@ class EmailService {
   }
 }
 
-export default new EmailService();
+// Export the class, not an instance
+export default EmailService;

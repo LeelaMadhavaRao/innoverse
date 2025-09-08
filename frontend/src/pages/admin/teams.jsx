@@ -53,7 +53,7 @@ function AdminTeams() {
     setNewTeam(prev => ({
       ...prev,
       teamSize: size,
-      members: Array(size).fill('') // Create array with empty strings for member names
+      members: Array(Math.max(0, size - 1)).fill('') // Create array with (size - 1) empty strings for member names (excluding leader)
     }));
   };
 
@@ -125,6 +125,7 @@ function AdminTeams() {
         customPassword: newTeam.password.trim() || undefined
       };
 
+      console.log('📝 Sending team data:', teamData);
       const response = await adminAPI.createTeam(teamData);
       
       toast({
@@ -150,6 +151,10 @@ function AdminTeams() {
       console.log('✅ Team created:', response.data);
     } catch (error) {
       console.error('❌ Error creating team:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      console.error('❌ Error message:', error.response?.data?.message);
+      
       toast({
         title: 'Error',
         description: error.response?.data?.message || 'Failed to create team',

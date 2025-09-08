@@ -4,8 +4,18 @@ import Team from '../models/team.model.js';
 import Faculty from '../models/faculty.model.js';
 import Evaluator from '../models/evaluator.model.js';
 import Gallery from '../models/gallery.model.js';
-import emailService from '../services/emailService.js';
+import LaunchedPoster from '../models/launchedPoster.model.js';
+import EmailService from '../services/emailService.js';
 import crypto from 'crypto';
+
+// Lazy load EmailService instance when needed
+let emailService = null;
+const getEmailService = () => {
+  if (!emailService) {
+    emailService = new EmailService();
+  }
+  return emailService;
+};
 
 // @desc    Get admin dashboard stats
 // @route   GET /api/admin/dashboard
@@ -71,6 +81,8 @@ export const getTeams = asyncHandler(async (req, res) => {
 // @route   POST /api/admin/teams
 // @access  Private/Admin
 export const createTeam = asyncHandler(async (req, res) => {
+  console.log('📝 Creating team with data:', JSON.stringify(req.body, null, 2));
+  
   const { 
     teamName, 
     teamLeader, 
@@ -86,10 +98,17 @@ export const createTeam = asyncHandler(async (req, res) => {
     throw new Error('Team name, leader name, and leader email are required');
   }
 
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(teamLeader.email)) {
+    res.status(400);
+    throw new Error('Please provide a valid email address for team leader');
+  }
+
   // Validate team size and members
   if (teamSize && teamMembers && teamMembers.length !== teamSize - 1) {
     res.status(400);
-    throw new Error(`Team members count must match team size minus leader (${teamSize - 1} members expected)`);
+    throw new Error(`Team members count must match team size minus leader (${teamSize - 1} members expected, got ${teamMembers.length})`);
   }
 
   // Check if team already exists
@@ -123,8 +142,9 @@ export const createTeam = asyncHandler(async (req, res) => {
       role: 'leader',
       isLeader: true
     },
-    ...(teamMembers || []).map(member => ({
-      name: member,
+    ...(teamMembers || []).map(memberName => ({
+      name: memberName,
+      email: '', // Optional field, can be empty
       role: 'member',
       isLeader: false
     }))
@@ -157,14 +177,15 @@ export const createTeam = asyncHandler(async (req, res) => {
     email: teamLeader.email,
     password,
     role: 'team',
-    teamProfile: team._id,
-    isActive: true,
+    teamId: team._id,
+    status: 'active',
     createdBy: req.user._id
   });
 
   // Send invitation email
+  let emailSent = false;
   try {
-    const emailResult = await emailService.sendTeamInvitation({
+    const emailResult = await getEmailService().sendTeamInvitation({
       teamData: {
         teamName,
         teamLeader,
@@ -183,15 +204,20 @@ export const createTeam = asyncHandler(async (req, res) => {
     team.invitationSent = true;
     team.invitationSentAt = new Date();
     await team.save();
+    emailSent = true;
 
-    console.log('✅ Team invitation email sent successfully');
+    console.log('✅ Team invitation email sent successfully to:', teamLeader.email);
   } catch (emailError) {
-    console.error('❌ Failed to send invitation email:', emailError);
-    // Don't fail the team creation if email fails
+    console.error('❌ Failed to send invitation email:', emailError.message);
+    console.log('⚠️ Team created successfully but email invitation failed');
+    console.log('📧 Team credentials - Username:', username, 'Password:', password);
+    console.log('📧 Please share these credentials with the team leader manually');
   }
 
   res.status(201).json({
-    message: 'Team created successfully and invitation sent',
+    message: emailSent 
+      ? 'Team created successfully and invitation sent'
+      : 'Team created successfully (email invitation failed - please share credentials manually)',
     team: {
       _id: team._id,
       teamName: team.teamName,
@@ -211,7 +237,8 @@ export const createTeam = asyncHandler(async (req, res) => {
     credentials: {
       username,
       password: password // Include password in response for admin reference
-    }
+    },
+    emailStatus: emailSent ? 'sent' : 'failed'
   });
 });
 
@@ -227,7 +254,7 @@ export const resendTeamInvitation = asyncHandler(async (req, res) => {
   }
 
   // Send invitation email
-  await emailService.sendTeamInvitation({
+  await getEmailService().sendTeamInvitation({
     teamData: team,
     credentials: team.credentials
   });
@@ -297,7 +324,7 @@ export const createFaculty = asyncHandler(async (req, res) => {
 
   // Send invitation email
   try {
-    await emailService.sendFacultyInvitation({
+    await getEmailService().sendFacultyInvitation({
       facultyData: {
         name,
         email,
@@ -347,7 +374,7 @@ export const resendFacultyInvitation = asyncHandler(async (req, res) => {
   await faculty.userId.save();
 
   // Send invitation email
-  await emailService.sendFacultyInvitation({
+  await getEmailService().sendFacultyInvitation({
     facultyData: faculty,
     credentials: {
       password: newPassword
@@ -427,7 +454,7 @@ export const createEvaluator = asyncHandler(async (req, res) => {
 
   // Send invitation email
   try {
-    await emailService.sendEvaluatorInvitation({
+    await getEmailService().sendEvaluatorInvitation({
       evaluatorData: {
         name,
         email,
@@ -701,57 +728,61 @@ export const getPosters = asyncHandler(async (req, res) => {
 export const launchPoster = asyncHandler(async (req, res) => {
   const { posterId, posterData, config, launchedBy } = req.body;
 
-  if (!posterId || !posterData || !config) {
+  if (!posterId || !posterData) {
     res.status(400);
-    throw new Error('Poster ID, poster data, and configuration are required');
+    throw new Error('Poster ID and poster data are required');
   }
 
-  // Create launch record
-  const launchData = {
-    id: crypto.randomUUID(),
+  // Check if poster is already launched
+  const existingLaunch = await LaunchedPoster.findOne({ posterId });
+  if (existingLaunch) {
+    res.status(400);
+    throw new Error('Poster is already launched');
+  }
+
+  // Default config if not provided
+  const defaultConfig = {
+    scheduledTime: new Date(),
+    duration: 24,
+    targetAudience: 'all',
+    message: '',
+    priority: 'medium'
+  };
+
+  // Create new launched poster record
+  const launchedPoster = new LaunchedPoster({
     posterId,
     title: posterData.title,
     subtitle: posterData.subtitle,
     description: posterData.description,
+    imageUrl: posterData.imageUrl,
     theme: posterData.theme,
-    posterData,
-    config: {
-      scheduledTime: config.scheduledTime || new Date().toISOString(),
-      duration: parseInt(config.duration) || 24,
-      targetAudience: config.targetAudience || 'all',
-      message: config.message || '',
-      priority: config.priority || 'medium'
-    },
-    launchedAt: new Date().toISOString(),
-    launchedBy: launchedBy || req.user.id,
+    date: posterData.date,
+    organizer: posterData.organizer,
+    config: { ...defaultConfig, ...config },
+    launchedBy: req.user._id,
     status: 'active',
+    isVisible: true,
     analytics: {
       views: 0,
       interactions: 0,
       shares: 0
     }
-  };
+  });
 
-  // In a real implementation, this would be saved to a database
-  // For now, we'll simulate a successful launch
-  
-  // Simulate poster broadcast/notification system
+  // Save to database
+  const savedLaunch = await launchedPoster.save();
+
+  // Log the launch
   console.log(`🚀 Poster Launch: ${posterData.title}`);
-  console.log(`📊 Configuration:`, config);
-  console.log(`👤 Launched by: ${launchedBy}`);
-  console.log(`🎯 Target Audience: ${config.targetAudience}`);
-  console.log(`⏰ Duration: ${config.duration} hours`);
-  
-  // Here you would implement:
-  // 1. Send push notifications to target audience
-  // 2. Update website banners/hero sections
-  // 3. Send emails if configured
-  // 4. Update social media if integrated
-  // 5. Start analytics tracking
+  console.log(`📊 Configuration:`, savedLaunch.config);
+  console.log(`👤 Launched by: ${req.user.email}`);
+  console.log(`🎯 Target Audience: ${savedLaunch.config.targetAudience}`);
+  console.log(`⏰ Duration: ${savedLaunch.config.duration} hours`);
   
   res.status(201).json({
     message: 'Poster launched successfully with stunning 3D effects!',
-    launch: launchData,
+    launch: savedLaunch,
     effects: {
       '3d_animations': true,
       'particle_effects': true,
@@ -770,16 +801,14 @@ export const launchPoster = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/poster-launch/launched
 // @access  Private/Admin
 export const getLaunchedPosters = asyncHandler(async (req, res) => {
-  // In a real implementation, this would fetch from a database
-  // For now, we'll return sample launched posters
-  const launchedPosters = [
-    // This would be populated by actual launch records
-  ];
+  const launchedPosters = await LaunchedPoster.find({})
+    .populate('launchedBy', 'name email')
+    .sort({ launchedAt: -1 });
 
   res.json(launchedPosters);
 });
 
-// @desc    Stop a poster launch
+// @desc    Stop a poster launch (Reset)
 // @route   DELETE /api/admin/poster-launch/launched/:id
 // @access  Private/Admin
 export const stopPosterLaunch = asyncHandler(async (req, res) => {
@@ -787,22 +816,27 @@ export const stopPosterLaunch = asyncHandler(async (req, res) => {
 
   if (!id) {
     res.status(400);
-    throw new Error('Launch ID is required');
+    throw new Error('Poster ID is required');
   }
 
-  // In a real implementation, this would:
-  // 1. Find the launch record in database
-  // 2. Update status to 'stopped'
-  // 3. Remove from active displays
-  // 4. Stop analytics tracking
-  // 5. Send notifications about stop
+  // Find and remove the launched poster
+  const launchedPoster = await LaunchedPoster.findOneAndDelete({ posterId: id });
 
-  console.log(`🛑 Stopping poster launch: ${id}`);
+  if (!launchedPoster) {
+    res.status(404);
+    throw new Error('Launched poster not found');
+  }
+
+  console.log(`🛑 Resetting poster launch: ${launchedPoster.title}`);
 
   res.json({
-    message: 'Poster launch stopped successfully',
-    stoppedAt: new Date().toISOString(),
-    stoppedBy: req.user.id
+    message: 'Poster launch reset successfully',
+    resetAt: new Date().toISOString(),
+    resetBy: req.user.email,
+    poster: {
+      id: launchedPoster.posterId,
+      title: launchedPoster.title
+    }
   });
 });
 
@@ -832,4 +866,45 @@ export const updatePosterLaunch = asyncHandler(async (req, res) => {
     updatedBy: req.user.id,
     updates: updateData
   });
+});
+
+// @desc    Reset all poster launches (bulk stop)
+// @route   DELETE /api/admin/poster-launch/reset-all
+// @access  Private/Admin
+export const resetAllPosterLaunches = asyncHandler(async (req, res) => {
+  try {
+    // Get all launched posters before deletion for logging
+    const launchedPosters = await LaunchedPoster.find({});
+    const posterCount = launchedPosters.length;
+
+    if (posterCount === 0) {
+      return res.json({
+        message: 'No launched posters found to reset',
+        resetCount: 0,
+        resetAt: new Date().toISOString(),
+        resetBy: req.user.email
+      });
+    }
+
+    // Delete all launched posters
+    const deleteResult = await LaunchedPoster.deleteMany({});
+
+    console.log(`🔄 Bulk Reset: ${posterCount} poster(s) reset by ${req.user.email}`);
+    console.log(`📊 Reset Details:`, launchedPosters.map(p => ({ id: p.posterId, title: p.title })));
+
+    res.json({
+      message: `Successfully reset ${posterCount} poster launch(es)`,
+      resetCount: deleteResult.deletedCount,
+      resetAt: new Date().toISOString(),
+      resetBy: req.user.email,
+      resetPosters: launchedPosters.map(p => ({ 
+        id: p.posterId, 
+        title: p.title 
+      }))
+    });
+  } catch (error) {
+    console.error('❌ Error in bulk reset:', error);
+    res.status(500);
+    throw new Error('Failed to reset poster launches');
+  }
 });

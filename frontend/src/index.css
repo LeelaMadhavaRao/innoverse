@@ -58,3 +58,73 @@
     @apply bg-background text-foreground min-h-screen font-sans antialiased;
   }
 }
+
+/* Admin scrollbar styles */
+.admin-scrollbar-desktop,
+.admin-scrollbar-mobile {
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #374151;
+}
+
+.admin-scrollbar-desktop::-webkit-scrollbar {
+  width: 14px;
+  background: #374151;
+}
+
+.admin-scrollbar-desktop::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 7px;
+  margin: 2px;
+}
+
+.admin-scrollbar-desktop::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 7px;
+  border: 2px solid #374151;
+  background-clip: padding-box;
+}
+
+.admin-scrollbar-desktop::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.admin-scrollbar-mobile::-webkit-scrollbar {
+  width: 12px;
+  background: #374151;
+}
+
+.admin-scrollbar-mobile::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 6px;
+  margin: 2px;
+}
+
+.admin-scrollbar-mobile::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 6px;
+  border: 2px solid #374151;
+  background-clip: padding-box;
+}
+
+.admin-scrollbar-mobile::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Force scrollbar to always show */
+.admin-scrollbar-desktop,
+.admin-scrollbar-mobile {
+  overflow-y: scroll !important;
+}
+
+/* Override Tailwind scrollbar hiding */
+.admin-scrollbar-desktop::-webkit-scrollbar,
+.admin-scrollbar-mobile::-webkit-scrollbar {
+  display: block !important;
+  width: 14px !important;
+}
+
+/* Ensure proper box sizing */
+.admin-scrollbar-desktop,
+.admin-scrollbar-mobile {
+  box-sizing: border-box;
+}
