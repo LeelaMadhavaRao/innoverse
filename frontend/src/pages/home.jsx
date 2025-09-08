@@ -56,7 +56,7 @@ function Home() {
     // Fetch events data
     const fetchEvents = async () => {
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-orpin.vercel.app/api';
         console.log('Fetching events from:', `${apiBaseUrl}/poster-launch/events`);
         
         const response = await fetch(`${apiBaseUrl}/poster-launch/events`);
@@ -87,7 +87,7 @@ function Home() {
     // Fetch launched posters
     const fetchLaunchedPosters = async () => {
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-orpin.vercel.app/api';
         console.log('Fetching from:', `${apiBaseUrl}/poster-launch/public/launched`);
         
         const response = await fetch(`${apiBaseUrl}/poster-launch/public/launched`);

@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://innoverse-sigma.vercel.app',
+        target: 'https://innoverse-orpin.vercel.app',
         changeOrigin: true,
       },
     },

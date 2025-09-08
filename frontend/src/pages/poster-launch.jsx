@@ -26,7 +26,7 @@ export default function PosterLaunch() {
   useEffect(() => {
     fetchData();
     // Set up SSE connection for real-time updates
-    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-orpin.vercel.app/api';
     const eventSource = new EventSource(`${apiBaseUrl}/poster-launch/events`);
     
     eventSource.onmessage = (event) => {

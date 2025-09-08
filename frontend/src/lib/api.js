@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://innoverse-orpin.vercel.app/api';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -74,7 +74,7 @@ export const authAPI = {
     try {
       console.log('🔄 Direct login attempt with fetch...');
       
-      const response = await fetch('https://innoverse-sigma.vercel.app/api/auth/login', {
+      const response = await fetch('https://innoverse-orpin.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
