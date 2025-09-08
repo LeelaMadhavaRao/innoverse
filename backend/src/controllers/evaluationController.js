@@ -1,4 +1,5 @@
-import { Team, Evaluation } from '../models/index.js';
+import Team from '../models/Team.js';
+import Evaluation from '../models/Evaluation.js';
 
 // Get teams for evaluation
 export const getTeamsForEvaluation = async (req, res) => {

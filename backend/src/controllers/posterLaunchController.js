@@ -1,4 +1,4 @@
-import { LaunchedPoster } from '../models/index.js';
+import LaunchedPoster from '../models/LaunchedPoster.js';
 
 // Test endpoint
 export const testPosterLaunch = (req, res) => {

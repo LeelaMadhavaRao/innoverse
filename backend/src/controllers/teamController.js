@@ -1,4 +1,7 @@
-import { Team, Gallery, Evaluation, User } from '../models/index.js';
+import Team from '../models/Team.js';
+import Gallery from '../models/Gallery.js';
+import Evaluation from '../models/Evaluation.js';
+import User from '../models/User.js';
 
 // Helper function to find user's team
 const findUserTeam = async (user, excludePassword = true) => {

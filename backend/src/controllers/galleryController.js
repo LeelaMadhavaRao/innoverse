@@ -1,4 +1,4 @@
-import { Gallery } from '../models/index.js';
+import Gallery from '../models/Gallery.js';
 import path from 'path';
 import fs from 'fs';
 

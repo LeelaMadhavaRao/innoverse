@@ -1,4 +1,8 @@
-import { User, Team, Gallery, Evaluation, LaunchedPoster } from '../models/index.js';
+import User from '../models/User.js';
+import Team from '../models/Team.js';
+import Gallery from '../models/Gallery.js';
+import Evaluation from '../models/Evaluation.js';
+import LaunchedPoster from '../models/LaunchedPoster.js';
 import bcrypt from 'bcryptjs';
 
 // Get dashboard statistics
