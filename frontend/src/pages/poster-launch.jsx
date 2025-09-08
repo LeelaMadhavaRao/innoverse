@@ -26,7 +26,8 @@ export default function PosterLaunch() {
   useEffect(() => {
     fetchData();
     // Set up SSE connection for real-time updates
-    const eventSource = new EventSource('/api/poster-launch/events');
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+    const eventSource = new EventSource(`${apiBaseUrl}/poster-launch/events`);
     
     eventSource.onmessage = (event) => {
       const newEvent = JSON.parse(event.data);

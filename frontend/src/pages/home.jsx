@@ -56,7 +56,8 @@ function Home() {
     // Fetch events data
     const fetchEvents = async () => {
       try {
-        const response = await fetch('/api/poster-launch/events');
+        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+        const response = await fetch(`${apiBaseUrl}/poster-launch/events`);
         const data = await response.json();
         setEvents(data);
       } catch (error) {
@@ -67,7 +68,8 @@ function Home() {
     // Fetch launched posters
     const fetchLaunchedPosters = async () => {
       try {
-        const response = await fetch('/api/poster-launch/public/launched');
+        const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+        const response = await fetch(`${apiBaseUrl}/poster-launch/public/launched`);
         const data = await response.json();
         if (data.success) {
           setLaunchedPosters(data.data);
@@ -232,7 +234,7 @@ function Home() {
             className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed text-gray-300"
           >
             Where innovative startup ideas come to life! Present your solutions with PPT, 
-            Lean Canvas models, and prototypes. Compete for glory and recognition in our 
+            Lean Canvas models, and prototypes. Compete for certificates, momentums and recognition in our 
             premier entrepreneurship event.
           </motion.p>
 
@@ -339,10 +341,10 @@ function Home() {
             className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20"
           >
             {[
-              { number: "50+", label: "Teams", icon: "👥" },
+              { number: "10", label: "Teams", icon: "👥" },
               { number: "2", label: "Days", icon: "📅" },
-              { number: "10+", label: "Evaluators", icon: "🏆" },
-              { number: "₹50K", label: "Prize Pool", icon: "💰" }
+              { number: "3", label: "Evaluators", icon: "🏆" },
+              { number: "Certificates", label: "& Momentums", icon: "🏅" }
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -577,7 +579,7 @@ function Home() {
                 <div className="flex items-start">
                   <div className="w-3 h-3 bg-orange-400 rounded-full mt-2 mr-4 flex-shrink-0"></div>
                   <div>
-                    <p className="font-semibold text-white">Awards Ceremony</p>
+                    <p className="font-semibold text-white">Certificates & Momentums</p>
                     <p className="text-gray-400">Recognition for outstanding teams</p>
                   </div>
                 </div>
@@ -720,7 +722,8 @@ function Home() {
                 { name: "Lakshmi Prasanna Yatham", year: "3/4 CSIT" },
                 { name: "Santosh Seelaboina", year: "3/4 CSIT" },
                 { name: "B Manogna Nagavalli", year: "3/4 CSIT" },
-                { name: "Leela Madhava Rao Nulakani", year: "3/4 CSIT" }
+                { name: "Leela Madhava Rao Nulakani", year: "3/4 CSIT" },
+                { name: "Ch Bhanu Venkata Manikanta", year: "3/4 CSIT" }
               ].map((student, index) => (
                 <motion.div
                   key={index}
@@ -887,34 +890,34 @@ function Home() {
               </div>
               
               <div>
-                <h4 className="text-xl font-semibold text-white mb-4">Recognition Levels</h4>
+                <h4 className="text-xl font-semibold text-white mb-4">Recognition & Rewards</h4>
                 <div className="space-y-3">
                   <div className="flex items-center p-3 bg-gradient-to-r from-yellow-600/20 to-yellow-500/20 rounded-xl">
-                    <span className="text-3xl mr-3">🥇</span>
+                    <span className="text-3xl mr-3">🏆</span>
                     <div>
-                      <div className="text-yellow-400 font-bold">1st Place</div>
-                      <div className="text-gray-400 text-sm">90+ points</div>
+                      <div className="text-yellow-400 font-bold">Excellence Certificate</div>
+                      <div className="text-gray-400 text-sm">Outstanding performance</div>
                     </div>
                   </div>
-                  <div className="flex items-center p-3 bg-gradient-to-r from-gray-400/20 to-gray-300/20 rounded-xl">
-                    <span className="text-3xl mr-3">🥈</span>
+                  <div className="flex items-center p-3 bg-gradient-to-r from-blue-600/20 to-blue-500/20 rounded-xl">
+                    <span className="text-3xl mr-3">🏅</span>
                     <div>
-                      <div className="text-gray-300 font-bold">2nd Place</div>
-                      <div className="text-gray-400 text-sm">80+ points</div>
+                      <div className="text-blue-400 font-bold">Participation Certificate</div>
+                      <div className="text-gray-400 text-sm">For all participants</div>
                     </div>
                   </div>
-                  <div className="flex items-center p-3 bg-gradient-to-r from-orange-600/20 to-orange-500/20 rounded-xl">
-                    <span className="text-3xl mr-3">🥉</span>
+                  <div className="flex items-center p-3 bg-gradient-to-r from-purple-600/20 to-purple-500/20 rounded-xl">
+                    <span className="text-3xl mr-3">🎖️</span>
                     <div>
-                      <div className="text-orange-400 font-bold">3rd Place</div>
-                      <div className="text-gray-400 text-sm">70+ points</div>
+                      <div className="text-purple-400 font-bold">Innovation Momentum</div>
+                      <div className="text-gray-400 text-sm">Special recognition items</div>
                     </div>
                   </div>
                   <div className="flex items-center p-3 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-xl">
-                    <span className="text-3xl mr-3">🏆</span>
+                    <span className="text-3xl mr-3">📜</span>
                     <div>
-                      <div className="text-emerald-400 font-bold">Special Recognition</div>
-                      <div className="text-gray-400 text-sm">Outstanding categories</div>
+                      <div className="text-emerald-400 font-bold">Digital Badges</div>
+                      <div className="text-gray-400 text-sm">LinkedIn & portfolio ready</div>
                     </div>
                   </div>
                 </div>
