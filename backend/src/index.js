@@ -3,6 +3,14 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Import routes directly
+import authRoutes from './routes/auth.routes.js';
+import adminRoutes from './routes/admin.routes.js';
+import evaluationRoutes from './routes/evaluation.routes.js';
+import galleryRoutes from './routes/gallery.routes.js';
+import teamRoutes from './routes/team.routes.js';
+import posterLaunchRoutes from './routes/posterLaunch.routes.js';
+
 // Get current directory for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,92 +98,73 @@ app.get('/favicon.ico', (req, res) => {
   res.status(204).end();
 });
 
-// Initialize other components with error handling
-async function initializeServer() {
+// Initialize database connection
+async function initializeDatabase() {
   try {
-    // Import database connection
     const { connectDB } = await import('./config/db.js');
-    
-    // Initialize database connection (non-blocking)
-    connectDB()
-      .then(() => console.log('✅ Database connected'))
-      .catch((error) => console.error('❌ Database failed:', error.message));
-
-    // Import and setup routes
-    try {
-      const authRoutes = (await import('./routes/auth.routes.js')).default;
-      app.use('/api/auth', authRoutes);
-      console.log('✅ Auth routes loaded');
-    } catch (error) {
-      console.error('❌ Auth routes failed:', error.message);
-    }
-
-    try {
-      const adminRoutes = (await import('./routes/admin.routes.js')).default;
-      app.use('/api/admin', adminRoutes);
-      console.log('✅ Admin routes loaded');
-    } catch (error) {
-      console.error('❌ Admin routes failed:', error.message);
-    }
-
-    try {
-      const evaluationRoutes = (await import('./routes/evaluation.routes.js')).default;
-      app.use('/api/evaluations', evaluationRoutes);
-      console.log('✅ Evaluation routes loaded');
-    } catch (error) {
-      console.error('❌ Evaluation routes failed:', error.message);
-    }
-
-    try {
-      const galleryRoutes = (await import('./routes/gallery.routes.js')).default;
-      app.use('/api/gallery', galleryRoutes);
-      console.log('✅ Gallery routes loaded');
-    } catch (error) {
-      console.error('❌ Gallery routes failed:', error.message);
-    }
-
-    try {
-      const teamRoutes = (await import('./routes/team.routes.js')).default;
-      app.use('/api/team', teamRoutes);
-      console.log('✅ Team routes loaded');
-    } catch (error) {
-      console.error('❌ Team routes failed:', error.message);
-    }
-
-    try {
-      const posterLaunchRoutes = (await import('./routes/posterLaunch.routes.js')).default;
-      app.use('/api/poster-launch', posterLaunchRoutes);
-      console.log('✅ Poster launch routes loaded');
-    } catch (error) {
-      console.error('❌ Poster launch routes failed:', error.message);
-    }
-
-    // Import and setup error handler
-    try {
-      const { errorHandler } = await import('./middleware/errorHandler.js');
-      app.use(errorHandler);
-      console.log('✅ Error handler loaded');
-    } catch (error) {
-      console.error('❌ Error handler failed:', error.message);
-      // Fallback error handler
-      app.use((error, req, res, next) => {
-        console.error('Error:', error);
-        res.status(500).json({ message: 'Internal server error' });
-      });
-    }
-
-    console.log('🎉 Server initialization complete');
-    
+    await connectDB();
+    console.log('✅ Database connected');
   } catch (error) {
-    console.error('❌ Server initialization failed:', error);
-    throw error;
+    console.error('❌ Database failed:', error.message);
   }
 }
 
-// Initialize server components
-initializeServer().catch(error => {
-  console.error('❌ Critical error during server initialization:', error);
+// Initialize database (non-blocking)
+initializeDatabase();
+
+// Setup routes
+try {
+  app.use('/api/auth', authRoutes);
+  console.log('✅ Auth routes loaded');
+} catch (error) {
+  console.error('❌ Auth routes failed:', error.message);
+}
+
+try {
+  app.use('/api/admin', adminRoutes);
+  console.log('✅ Admin routes loaded');
+} catch (error) {
+  console.error('❌ Admin routes failed:', error.message);
+}
+
+try {
+  app.use('/api/evaluations', evaluationRoutes);
+  console.log('✅ Evaluation routes loaded');
+} catch (error) {
+  console.error('❌ Evaluation routes failed:', error.message);
+}
+
+try {
+  app.use('/api/gallery', galleryRoutes);
+  console.log('✅ Gallery routes loaded');
+} catch (error) {
+  console.error('❌ Gallery routes failed:', error.message);
+}
+
+try {
+  app.use('/api/team', teamRoutes);
+  console.log('✅ Team routes loaded');
+} catch (error) {
+  console.error('❌ Team routes failed:', error.message);
+}
+
+try {
+  app.use('/api/poster-launch', posterLaunchRoutes);
+  console.log('✅ Poster launch routes loaded');
+} catch (error) {
+  console.error('❌ Poster launch routes failed:', error.message);
+}
+
+// Error handler
+app.use((error, req, res, next) => {
+  console.error('Error:', error);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+  });
 });
+
+console.log('🎉 Server initialization complete');
 
 // Export for Vercel serverless
 export default app;
