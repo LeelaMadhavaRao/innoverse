@@ -5,8 +5,9 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon src/index.js",
+    "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "build": "echo 'No build step required'",
     "test": "jest",
     "create-admin": "node create-admin.js"
   },
