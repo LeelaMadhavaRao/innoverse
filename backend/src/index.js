@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Import routes directly
 import authRoutes from './routes/auth.routes.js';
@@ -11,10 +13,6 @@ import galleryRoutes from './routes/gallery.routes.js';
 import teamRoutes from './routes/team.routes.js';
 import posterLaunchRoutes from './routes/posterLaunch.routes.js';
 
-// Get current directory for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 console.log('🚀 Starting Innoverse Backend...');
 console.log('  NODE_ENV:', process.env.NODE_ENV);
 console.log('  MONGODB_URI:', process.env.MONGODB_URI ? '***SET***' : 'NOT SET');
@@ -23,19 +21,12 @@ console.log('  JWT_SECRET:', process.env.JWT_SECRET ? '***SET***' : 'NOT SET');
 // Initialize express
 const app = express();
 
-// Basic middleware first
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Enable trust proxy for Vercel
+app.set('trust proxy', 1);
 
-// CORS configuration - simplified and more permissive
+// CORS configuration - more permissive for debugging
 app.use(cors({
-  origin: [
-    'https://innoverse-n.vercel.app',
-    'https://innoverse-sigma.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://localhost:5000'
-  ],
+  origin: true, // Allow all origins for now
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -47,21 +38,37 @@ app.use(cors({
     'Cache-Control',
     'Pragma'
   ],
-  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  optionsSuccessStatus: 200
 }));
 
 // Handle preflight requests explicitly
 app.options('*', cors());
 
+// Basic middleware
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  next();
+});
+
 // Health check route (must work even if other imports fail)
 app.get('/', (req, res) => {
   try {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
     res.json({
       message: 'Innoverse Backend API is running! 🚀',
       status: 'healthy',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
       version: '1.0.0',
+      cors: 'enabled',
       endpoints: [
         '/api/auth',
         '/api/admin', 
@@ -82,20 +89,35 @@ app.get('/', (req, res) => {
 
 // API health check
 app.get('/api/health', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    cors: 'working'
   });
 });
 
 // CORS test endpoint
 app.get('/api/test-cors', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.json({
     message: 'CORS is working!',
     origin: req.headers.origin,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    headers: req.headers
   });
+});
+
+// Explicit OPTIONS handler for all API routes
+app.options('/api/*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.status(200).end();
 });
 
 // Favicon route
