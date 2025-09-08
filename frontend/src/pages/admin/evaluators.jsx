@@ -123,7 +123,7 @@ function AdminEvaluators() {
         name: evaluatorData.name,
         email: evaluatorData.email,
         password: evaluatorData.password,
-        loginUrl: 'http://localhost:5173/login',
+        loginUrl: 'https://innoverse-frontend.vercel.app/login',
         organization: evaluatorData.evaluatorDetails.organization,
         expertise: evaluatorData.evaluatorDetails.expertise
       }

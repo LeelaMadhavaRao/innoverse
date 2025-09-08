@@ -21,12 +21,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost:5000',
-  process.env.FRONTEND_URL,
   'https://innoverse-frontend.vercel.app',
   'https://innoverse-sigma.vercel.app', // Your backend URL
+  process.env.FRONTEND_URL,
+  'http://localhost:5173', // For local development
+  'http://localhost:3000', // For local development
+  'http://localhost:5000', // For local development
 ].filter(Boolean);
 
 app.use(cors({

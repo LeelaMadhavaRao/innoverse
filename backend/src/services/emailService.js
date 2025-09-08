@@ -71,7 +71,7 @@ class EmailService {
           <div style="background: white; border-radius: 10px; padding: 25px; margin: 25px 0; border-left: 4px solid #667eea;">
             <h3 style="color: #667eea; margin-top: 0;">🔐 Your Login Credentials</h3>
             <div style="background: #f1f3f4; padding: 15px; border-radius: 8px; margin: 15px 0;">
-              <p style="margin: 5px 0;"><strong>Portal URL:</strong> <a href="http://localhost:5173/login" style="color: #667eea;">http://localhost:5173/login</a></p>
+              <p style="margin: 5px 0;"><strong>Portal URL:</strong> <a href="https://innoverse-frontend.vercel.app/login" style="color: #667eea;">https://innoverse-frontend.vercel.app/login</a></p>
               <p style="margin: 5px 0;"><strong>Username:</strong> <code style="background: #e8f0fe; padding: 2px 6px; border-radius: 4px;">${credentials.username}</code></p>
               <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: #e8f0fe; padding: 2px 6px; border-radius: 4px;">${credentials.password}</code></p>
             </div>
@@ -99,7 +99,7 @@ class EmailService {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5173/login" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
+            <a href="https://innoverse-frontend.vercel.app/login" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
               🚀 Access Team Portal
             </a>
           </div>
@@ -141,7 +141,7 @@ class EmailService {
           <div style="background: white; border-radius: 10px; padding: 25px; margin: 25px 0; border-left: 4px solid #8e2de2;">
             <h3 style="color: #8e2de2; margin-top: 0;">🔐 Your Faculty Portal Access</h3>
             <div style="background: #f1f3f4; padding: 15px; border-radius: 8px; margin: 15px 0;">
-              <p style="margin: 5px 0;"><strong>Portal URL:</strong> <a href="http://localhost:5173/login" style="color: #8e2de2;">http://localhost:5173/login</a></p>
+              <p style="margin: 5px 0;"><strong>Portal URL:</strong> <a href="https://innoverse-frontend.vercel.app/login" style="color: #8e2de2;">https://innoverse-frontend.vercel.app/login</a></p>
               <p style="margin: 5px 0;"><strong>Email:</strong> <code style="background: #e8f0fe; padding: 2px 6px; border-radius: 4px;">${facultyData.email}</code></p>
               <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: #e8f0fe; padding: 2px 6px; border-radius: 4px;">${credentials.password}</code></p>
             </div>
@@ -156,7 +156,7 @@ class EmailService {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5173/login" style="background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
+            <a href="https://innoverse-frontend.vercel.app/login" style="background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
               🎓 Access Faculty Portal
             </a>
           </div>
@@ -193,7 +193,7 @@ class EmailService {
           <div style="background: white; border-radius: 10px; padding: 25px; margin: 25px 0; border-left: 4px solid #1e3c72;">
             <h3 style="color: #1e3c72; margin-top: 0;">🔐 Your Evaluator Portal Access</h3>
             <div style="background: #f1f3f4; padding: 15px; border-radius: 8px; margin: 15px 0;">
-              <p style="margin: 5px 0;"><strong>Portal URL:</strong> <a href="http://localhost:5173/login" style="color: #1e3c72;">http://localhost:5173/login</a></p>
+              <p style="margin: 5px 0;"><strong>Portal URL:</strong> <a href="https://innoverse-frontend.vercel.app/login" style="color: #1e3c72;">https://innoverse-frontend.vercel.app/login</a></p>
               <p style="margin: 5px 0;"><strong>Email:</strong> <code style="background: #e8f0fe; padding: 2px 6px; border-radius: 4px;">${evaluatorData.email}</code></p>
               <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: #e8f0fe; padding: 2px 6px; border-radius: 4px;">${credentials.password}</code></p>
             </div>
@@ -208,7 +208,7 @@ class EmailService {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5173/login" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
+            <a href="https://innoverse-frontend.vercel.app/login" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
               👨‍⚖️ Access Evaluator Portal
             </a>
           </div>
@@ -249,7 +249,7 @@ class EmailService {
           </div>
 
           <div style="text-align: center; margin: 30px 0;">
-            <a href="http://localhost:5173/login" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
+            <a href="https://innoverse-frontend.vercel.app/login" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; display: inline-block;">
               📝 Complete Evaluations
             </a>
           </div>

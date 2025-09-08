@@ -40,7 +40,7 @@ npm run dev
 
 ### Frontend (.env)
 ```
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=https://innoverse-sigma.vercel.app/api
 ```
 
 ### Backend (.env)

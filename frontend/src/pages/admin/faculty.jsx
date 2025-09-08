@@ -113,7 +113,7 @@ function AdminFaculty() {
         name: facultyData.name,
         email: facultyData.email,
         password: facultyData.password,
-        loginUrl: 'http://localhost:5173/login',
+        loginUrl: 'https://innoverse-frontend.vercel.app/login',
         department: facultyData.facultyDetails.department,
         designation: facultyData.facultyDetails.designation
       }
