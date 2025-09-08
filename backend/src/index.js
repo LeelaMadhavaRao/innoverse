@@ -143,7 +143,7 @@ async function initializeServer() {
     }
 
     try {
-      const posterLaunchRoutes = (await import('./routes/posterLaunch.routes.js')).default;
+      const posterLaunchRoutes = (await import('./routes/posterLaunch.routes.simple.js')).default;
       app.use('/api/poster-launch', posterLaunchRoutes);
       console.log('✅ Poster launch routes loaded');
     } catch (error) {

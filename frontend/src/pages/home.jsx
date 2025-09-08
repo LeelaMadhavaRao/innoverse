@@ -57,11 +57,30 @@ function Home() {
     const fetchEvents = async () => {
       try {
         const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+        console.log('Fetching events from:', `${apiBaseUrl}/poster-launch/events`);
+        
         const response = await fetch(`${apiBaseUrl}/poster-launch/events`);
+        console.log('Events response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        setEvents(data);
+        console.log('Events data:', data);
+        
+        setEvents(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching events:', error);
+        // Set default events on error
+        setEvents([
+          {
+            id: 1,
+            title: 'Event Information Loading',
+            date: new Date().toISOString(),
+            description: 'Event details will be updated soon'
+          }
+        ]);
       }
     };
 
@@ -69,13 +88,50 @@ function Home() {
     const fetchLaunchedPosters = async () => {
       try {
         const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://innoverse-sigma.vercel.app/api';
+        console.log('Fetching from:', `${apiBaseUrl}/poster-launch/public/launched`);
+        
         const response = await fetch(`${apiBaseUrl}/poster-launch/public/launched`);
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        if (data.success) {
+        console.log('Received data:', data);
+        
+        if (data.success && data.data) {
           setLaunchedPosters(data.data);
+        } else {
+          // If no posters are available, show sample/demo posters
+          setLaunchedPosters([
+            {
+              posterId: 'demo-1',
+              title: 'Welcome to Innoverse 2025',
+              subtitle: 'Innovation Awaits',
+              description: 'Join us for an exciting journey of innovation and entrepreneurship.',
+              imageUrl: '/team-photo-of-4-students-working-together.jpg',
+              theme: 'gradient-blue',
+              date: new Date().toISOString(),
+              organizer: 'Innoverse Team'
+            }
+          ]);
         }
       } catch (error) {
         console.error('Error fetching launched posters:', error);
+        // Set demo posters on error as well
+        setLaunchedPosters([
+          {
+            posterId: 'demo-1',
+            title: 'Welcome to Innoverse 2025',
+            subtitle: 'Innovation Awaits',
+            description: 'Join us for an exciting journey of innovation and entrepreneurship.',
+            imageUrl: '/team-photo-of-4-students-working-together.jpg',
+            theme: 'gradient-blue',
+            date: new Date().toISOString(),
+            organizer: 'Innoverse Team'
+          }
+        ]);
       }
     };
 
