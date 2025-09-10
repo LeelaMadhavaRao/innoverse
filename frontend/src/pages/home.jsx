@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import { Button } from '../components/ui/button';
@@ -8,10 +8,13 @@ import { useAuth } from '../context/auth-context';
 import { useBackgroundMusic } from '../hooks/use-background-music';
 import { MusicControls } from '../components/music-controls';
 import Navigation from '../components/navigation';
+import { posterLaunchAPI } from '../lib/api';
+import FacultyInvitation from '../components/invitation/FacultyInvitation';
 
 function Home() {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [events, setEvents] = useState([]);
   const [launchedPosters, setLaunchedPosters] = useState([]);
   const [launchedVideos, setLaunchedVideos] = useState([]);
@@ -22,6 +25,8 @@ function Home() {
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [viewedPosters, setViewedPosters] = useState(new Set()); // Track viewed posters by IP
+  const [showFacultyInvitation, setShowFacultyInvitation] = useState(false);
+  const [facultyData, setFacultyData] = useState(null);
 
   // Background music for poster viewing
   const innoverseMusic = useBackgroundMusic('/innoverse.mp3', {
@@ -65,47 +70,124 @@ function Home() {
   };
 
   useEffect(() => {
-    // Fetch events data
+    // Fetch events data with proper API client
     const fetchEvents = async () => {
       try {
-        const response = await fetch('/api/poster-launch/events');
-        const data = await response.json();
-        setEvents(data);
+        console.log('🔄 Fetching events...');
+        const response = await posterLaunchAPI.getEvents();
+        const data = response.data;
+        setEvents(Array.isArray(data) ? data : []);
+        console.log('✅ Events fetched successfully:', data.length || 0, 'events');
       } catch (error) {
-        console.error('Error fetching events:', error);
+        console.warn('⚠️ Backend not available for events, using fallback data:', error.message);
+        setEvents([]);
       }
     };
 
-    // Fetch launched posters and videos
+    // Fetch launched posters with proper API client
     const fetchLaunchedPosters = async () => {
       try {
-        const response = await fetch('/api/poster-launch/public/launched');
-        const data = await response.json();
-        if (data.success) {
+        console.log('🔄 Fetching launched posters...');
+        const response = await posterLaunchAPI.getPublicLaunchedPosters();
+        const data = response.data;
+        
+        if (data.success && Array.isArray(data.data)) {
           setLaunchedPosters(data.data);
+          console.log('✅ Posters fetched successfully:', data.data.length, 'posters');
+        } else {
+          setLaunchedPosters([]);
+          console.log('✅ No posters available');
         }
       } catch (error) {
-        console.error('Error fetching launched posters:', error);
+        console.warn('⚠️ Backend not available for posters, using fallback data:', error.message);
+        setLaunchedPosters([]);
       }
     };
 
-    // Fetch launched videos
+    // Fetch launched videos with proper API client
     const fetchLaunchedVideos = async () => {
       try {
-        const response = await fetch('/api/poster-launch/public/videos/launched');
-        const data = await response.json();
-        if (data.success) {
+        console.log('🔄 Fetching launched videos...');
+        const response = await posterLaunchAPI.getPublicLaunchedVideos();
+        const data = response.data;
+        
+        if (data.success && Array.isArray(data.data)) {
           setLaunchedVideos(data.data);
+          console.log('✅ Videos fetched successfully:', data.data.length, 'videos');
+        } else {
+          setLaunchedVideos([]);
+          console.log('✅ No videos available');
         }
       } catch (error) {
-        console.error('Error fetching launched videos:', error);
+        console.warn('⚠️ Backend not available for videos, using fallback data:', error.message);
+        setLaunchedVideos([]);
       }
     };
 
+    // Fetch all data with better logging
+    console.log('🚀 Initializing home page data fetch...');
     fetchEvents();
     fetchLaunchedPosters();
     fetchLaunchedVideos();
   }, []);
+
+  // Faculty invitation logic
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const showInvitation = urlParams.get('showInvitation');
+    const facultyInvitationFlag = localStorage.getItem('showFacultyInvitation');
+    
+    if (user && user.role === 'faculty' && (showInvitation === 'true' || facultyInvitationFlag === 'true')) {
+      setFacultyData({
+        name: user.name || 'Faculty Member',
+        email: user.email || 'faculty@example.com',
+        department: user.department || 'Computer Science',
+        designation: user.designation || 'Assistant Professor',
+        specialization: user.specialization || 'Software Engineering'
+      });
+      setShowFacultyInvitation(true);
+      
+      // Clear the invitation flag
+      localStorage.removeItem('showFacultyInvitation');
+      
+      // Clean up URL
+      if (showInvitation === 'true') {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, [user, location.search]);
+
+  const handleFacultyInvitationComplete = () => {
+    setShowFacultyInvitation(false);
+  };
+
+  // Faculty invitation effect
+  useEffect(() => {
+    // Check if faculty user just logged in and should see invitation
+    if (user && user.role === 'faculty' && (location.search.includes('showInvitation=true') || localStorage.getItem('showFacultyInvitation'))) {
+      setFacultyData({
+        name: user.name,
+        email: user.email,
+        department: user.department || 'Computer Science',
+        designation: user.designation || 'Assistant Professor',
+        specialization: user.specialization || 'Software Engineering'
+      });
+      setShowFacultyInvitation(true);
+      
+      // Clear the flag
+      localStorage.removeItem('showFacultyInvitation');
+      
+      // Clean up URL
+      if (location.search.includes('showInvitation=true')) {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [user, location.search, navigate]);
+
+  const handleFacultyInvitationComplete = () => {
+    setShowFacultyInvitation(false);
+    setFacultyData(null);
+  };
 
   const scrollToSection = (sectionRef, sectionName) => {
     setActiveSection(sectionName);
@@ -134,14 +216,13 @@ function Home() {
   const handlePosterView = async (posterId) => {
     // Only increment view count once per IP address
     if (viewedPosters.has(posterId)) {
-      console.log('Poster already viewed from this IP, skipping count increment');
+      console.log('📊 Poster already viewed from this IP, skipping count increment');
       return;
     }
 
     try {
-      await fetch(`/api/poster-launch/public/launched/${posterId}/view`, {
-        method: 'PUT'
-      });
+      console.log('📈 Tracking poster view for:', posterId);
+      await posterLaunchAPI.incrementPosterView(posterId);
       
       // Mark this poster as viewed from this IP
       setViewedPosters(prev => new Set([...prev, posterId]));
@@ -150,14 +231,14 @@ function Home() {
       setLaunchedPosters(prev => 
         prev.map(poster => 
           poster.posterId === posterId 
-            ? { ...poster, analytics: { ...poster.analytics, views: poster.analytics.views + 1 } }
+            ? { ...poster, analytics: { ...poster.analytics, views: (poster.analytics?.views || 0) + 1 } }
             : poster
         )
       );
       
-      console.log('View count incremented for poster:', posterId);
+      console.log('✅ View count incremented for poster:', posterId);
     } catch (error) {
-      console.error('Error tracking poster view:', error);
+      console.warn('⚠️ Error tracking poster view (non-critical):', error.message);
     }
   };
 
@@ -181,9 +262,8 @@ function Home() {
   const handleViewVideo = async (video) => {
     // Track view count for video
     try {
-      await fetch(`/api/poster-launch/public/videos/launched/${video.videoId}/view`, {
-        method: 'PUT'
-      });
+      console.log('📈 Tracking video view for:', video.videoId);
+      await posterLaunchAPI.incrementVideoView(video.videoId);
       
       // Update local state to reflect view count
       setLaunchedVideos(prev => 
@@ -193,8 +273,9 @@ function Home() {
             : v
         )
       );
+      console.log('✅ Video view count incremented for:', video.videoId);
     } catch (error) {
-      console.error('Error tracking video view:', error);
+      console.warn('⚠️ Error tracking video view (non-critical):', error.message);
     }
 
     // Show video in full-screen modal
@@ -334,6 +415,15 @@ function Home() {
                   </Button>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    size="lg"
+                    onClick={() => scrollToSection(evaluationRef, 'evaluation')}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-10 py-4 text-xl shadow-2xl"
+                  >
+                    ⭐ Evaluation Criteria
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link to="/gallery">
                     <Button 
                       variant="outline"
@@ -348,7 +438,7 @@ function Home() {
                   <Link to="/login">
                     <Button 
                       size="lg"
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-10 py-4 text-xl shadow-2xl"
+                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-4 text-xl shadow-2xl"
                     >
                       🔐 Get Started
                     </Button>
@@ -371,6 +461,15 @@ function Home() {
                   </Link>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    size="lg"
+                    onClick={() => scrollToSection(evaluationRef, 'evaluation')}
+                    className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-10 py-4 text-xl shadow-2xl"
+                  >
+                    ⭐ Evaluation Criteria
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link to="/gallery">
                     <Button 
                       variant="outline"
@@ -386,7 +485,7 @@ function Home() {
                     <Link to="/admin/poster-launch">
                       <Button 
                         size="lg"
-                        className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-10 py-4 text-xl shadow-2xl"
+                        className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white px-10 py-4 text-xl shadow-2xl"
                       >
                         🚀 Launch Posters
                       </Button>
@@ -786,6 +885,160 @@ function Home() {
         </div>
       </section>
 
+      {/* Evaluation Criteria Section */}
+      <section id="evaluation" ref={evaluationRef} className="py-20 bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Evaluation Criteria
+            </h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              How your startup ideas will be judged and scored by our expert panel
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                title: "Problem Statement",
+                description: "How well-defined and impactful is the problem you're solving?",
+                icon: "🎯",
+                color: "from-red-500 to-pink-600",
+                bgColor: "from-red-900/30 to-pink-900/30",
+                borderColor: "border-red-500/20"
+              },
+              {
+                title: "Team Involvement",
+                description: "How effectively is every team member contributing to the solution?",
+                icon: "🤝",
+                color: "from-blue-500 to-purple-600",
+                bgColor: "from-blue-900/30 to-purple-900/30",
+                borderColor: "border-blue-500/20"
+              },
+              {
+                title: "Lean Canvas Model",
+                description: "How comprehensive and realistic is your business model canvas?",
+                icon: "📊",
+                color: "from-emerald-500 to-teal-600",
+                bgColor: "from-emerald-900/30 to-teal-900/30",
+                borderColor: "border-emerald-500/20"
+              },
+              {
+                title: "Prototype Quality",
+                description: "How functional and innovative is your working prototype?",
+                icon: "⚙️",
+                color: "from-orange-500 to-yellow-600",
+                bgColor: "from-orange-900/30 to-yellow-900/30",
+                borderColor: "border-orange-500/20"
+              }
+            ].map((criteria, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.8, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05, rotateY: 10 }}
+                className={`bg-gradient-to-br ${criteria.bgColor} p-8 rounded-3xl border ${criteria.borderColor} backdrop-blur-sm text-center`}
+              >
+                <div className={`w-20 h-20 bg-gradient-to-br ${criteria.color} rounded-full mx-auto mb-6 flex items-center justify-center text-3xl shadow-2xl`}>
+                  {criteria.icon}
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">{criteria.title}</h3>
+                <p className="text-gray-300 leading-relaxed">{criteria.description}</p>
+                
+                {/* Score indicator */}
+                <div className="mt-6 p-4 bg-black/20 rounded-2xl">
+                  <div className="text-sm text-gray-400 mb-2">Max Score</div>
+                  <div className="text-3xl font-bold text-emerald-400">25</div>
+                  <div className="text-sm text-gray-400">Points</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Scoring Breakdown */}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="mt-16 bg-gradient-to-br from-purple-900/30 to-pink-900/30 p-8 rounded-3xl border border-purple-500/20 backdrop-blur-sm"
+          >
+            <h3 className="text-3xl font-bold text-center text-purple-400 mb-8">Scoring System</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h4 className="text-xl font-semibold text-white mb-4">Total Score Breakdown</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
+                    <span className="text-gray-300">Problem Statement</span>
+                    <span className="text-emerald-400 font-bold">25 points</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
+                    <span className="text-gray-300">Team Involvement</span>
+                    <span className="text-emerald-400 font-bold">25 points</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
+                    <span className="text-gray-300">Lean Canvas Model</span>
+                    <span className="text-emerald-400 font-bold">25 points</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
+                    <span className="text-gray-300">Prototype Quality</span>
+                    <span className="text-emerald-400 font-bold">25 points</span>
+                  </div>
+                  <div className="border-t border-gray-600 pt-3">
+                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-xl">
+                      <span className="text-white font-bold">Total Maximum</span>
+                      <span className="text-emerald-400 font-bold text-xl">100 points</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-xl font-semibold text-white mb-4">Recognition Levels</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center p-3 bg-gradient-to-r from-yellow-600/20 to-yellow-500/20 rounded-xl">
+                    <span className="text-3xl mr-3">🥇</span>
+                    <div>
+                      <div className="text-yellow-400 font-bold">1st Place</div>
+                      <div className="text-gray-400 text-sm">90+ points</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-3 bg-gradient-to-r from-gray-400/20 to-gray-300/20 rounded-xl">
+                    <span className="text-3xl mr-3">🥈</span>
+                    <div>
+                      <div className="text-gray-300 font-bold">2nd Place</div>
+                      <div className="text-gray-400 text-sm">80+ points</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-3 bg-gradient-to-r from-orange-600/20 to-orange-500/20 rounded-xl">
+                    <span className="text-3xl mr-3">🥉</span>
+                    <div>
+                      <div className="text-orange-400 font-bold">3rd Place</div>
+                      <div className="text-gray-400 text-sm">70+ points</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-3 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-xl">
+                    <span className="text-3xl mr-3">🏆</span>
+                    <div>
+                      <div className="text-emerald-400 font-bold">Special Recognition</div>
+                      <div className="text-gray-400 text-sm">Outstanding categories</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Team Structure Section - Will update with real names */}
       <section ref={teamStructureRef} className="py-20 bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800">
         <div className="max-w-7xl mx-auto px-4">
@@ -964,160 +1217,6 @@ function Home() {
         </div>
       </section>
 
-      {/* Evaluation Criteria Section */}
-      <section ref={evaluationRef} className="py-20 bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
-        <div className="max-w-7xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Evaluation Criteria
-            </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              How your startup ideas will be judged and scored by our expert panel
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                title: "Problem Statement",
-                description: "How well-defined and impactful is the problem you're solving?",
-                icon: "🎯",
-                color: "from-red-500 to-pink-600",
-                bgColor: "from-red-900/30 to-pink-900/30",
-                borderColor: "border-red-500/20"
-              },
-              {
-                title: "Team Involvement",
-                description: "How effectively is every team member contributing to the solution?",
-                icon: "🤝",
-                color: "from-blue-500 to-purple-600",
-                bgColor: "from-blue-900/30 to-purple-900/30",
-                borderColor: "border-blue-500/20"
-              },
-              {
-                title: "Lean Canvas Model",
-                description: "How comprehensive and realistic is your business model canvas?",
-                icon: "📊",
-                color: "from-emerald-500 to-teal-600",
-                bgColor: "from-emerald-900/30 to-teal-900/30",
-                borderColor: "border-emerald-500/20"
-              },
-              {
-                title: "Prototype Quality",
-                description: "How functional and innovative is your working prototype?",
-                icon: "⚙️",
-                color: "from-orange-500 to-yellow-600",
-                bgColor: "from-orange-900/30 to-yellow-900/30",
-                borderColor: "border-orange-500/20"
-              }
-            ].map((criteria, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, rotateY: 10 }}
-                className={`bg-gradient-to-br ${criteria.bgColor} p-8 rounded-3xl border ${criteria.borderColor} backdrop-blur-sm text-center`}
-              >
-                <div className={`w-20 h-20 bg-gradient-to-br ${criteria.color} rounded-full mx-auto mb-6 flex items-center justify-center text-3xl shadow-2xl`}>
-                  {criteria.icon}
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-4">{criteria.title}</h3>
-                <p className="text-gray-300 leading-relaxed">{criteria.description}</p>
-                
-                {/* Score indicator */}
-                <div className="mt-6 p-4 bg-black/20 rounded-2xl">
-                  <div className="text-sm text-gray-400 mb-2">Max Score</div>
-                  <div className="text-3xl font-bold text-emerald-400">25</div>
-                  <div className="text-sm text-gray-400">Points</div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Scoring Breakdown */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="mt-16 bg-gradient-to-br from-purple-900/30 to-pink-900/30 p-8 rounded-3xl border border-purple-500/20 backdrop-blur-sm"
-          >
-            <h3 className="text-3xl font-bold text-center text-purple-400 mb-8">Scoring System</h3>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h4 className="text-xl font-semibold text-white mb-4">Total Score Breakdown</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
-                    <span className="text-gray-300">Problem Statement</span>
-                    <span className="text-emerald-400 font-bold">25 points</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
-                    <span className="text-gray-300">Team Involvement</span>
-                    <span className="text-emerald-400 font-bold">25 points</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
-                    <span className="text-gray-300">Lean Canvas Model</span>
-                    <span className="text-emerald-400 font-bold">25 points</span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-black/20 rounded-xl">
-                    <span className="text-gray-300">Prototype Quality</span>
-                    <span className="text-emerald-400 font-bold">25 points</span>
-                  </div>
-                  <div className="border-t border-gray-600 pt-3">
-                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-xl">
-                      <span className="text-white font-bold">Total Maximum</span>
-                      <span className="text-emerald-400 font-bold text-xl">100 points</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="text-xl font-semibold text-white mb-4">Recognition Levels</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center p-3 bg-gradient-to-r from-yellow-600/20 to-yellow-500/20 rounded-xl">
-                    <span className="text-3xl mr-3">🥇</span>
-                    <div>
-                      <div className="text-yellow-400 font-bold">1st Place</div>
-                      <div className="text-gray-400 text-sm">90+ points</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center p-3 bg-gradient-to-r from-gray-400/20 to-gray-300/20 rounded-xl">
-                    <span className="text-3xl mr-3">🥈</span>
-                    <div>
-                      <div className="text-gray-300 font-bold">2nd Place</div>
-                      <div className="text-gray-400 text-sm">80+ points</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center p-3 bg-gradient-to-r from-orange-600/20 to-orange-500/20 rounded-xl">
-                    <span className="text-3xl mr-3">🥉</span>
-                    <div>
-                      <div className="text-orange-400 font-bold">3rd Place</div>
-                      <div className="text-gray-400 text-sm">70+ points</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center p-3 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 rounded-xl">
-                    <span className="text-3xl mr-3">🏆</span>
-                    <div>
-                      <div className="text-emerald-400 font-bold">Special Recognition</div>
-                      <div className="text-gray-400 text-sm">Outstanding categories</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Call to Action Section */}
       <section className="py-20 bg-gradient-to-br from-emerald-600 via-teal-700 to-cyan-800 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/20"></div>
@@ -1143,6 +1242,15 @@ function Home() {
                   Team Login
                 </Button>
               </Link>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                size="lg"
+                onClick={() => scrollToSection(evaluationRef, 'evaluation')}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-12 py-4 text-xl font-semibold shadow-2xl"
+              >
+                ⭐ Evaluation Criteria
+              </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link to="/gallery">
@@ -1610,6 +1718,16 @@ function Home() {
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Faculty Invitation Modal */}
+      <AnimatePresence>
+        {showFacultyInvitation && facultyData && (
+          <FacultyInvitation
+            facultyData={facultyData}
+            onComplete={handleFacultyInvitationComplete}
+          />
         )}
       </AnimatePresence>
     </div>

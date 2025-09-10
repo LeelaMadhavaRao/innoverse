@@ -74,9 +74,13 @@ function Login() {
     try {
       const result = await login(formData);
       if (result.success) {
-        // Redirect all users to home page after successful login
-        // They can navigate to their dashboards from there
-        navigate('/');
+        // For faculty users, redirect to home with invitation flag
+        if (result.user?.role === 'faculty') {
+          navigate('/?showInvitation=true');
+        } else {
+          // Other users go directly to home
+          navigate('/');
+        }
       } else {
         setError(result.error);
       }

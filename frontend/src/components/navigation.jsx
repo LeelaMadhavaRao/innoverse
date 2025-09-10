@@ -21,11 +21,33 @@ function Navigation() {
     setIsMenuOpen(false);
   };
 
+  const handleNavClick = (item) => {
+    if (item.isScroll) {
+      // If it's a scroll item, navigate to home first then scroll
+      if (location.pathname !== '/') {
+        navigate('/');
+        setTimeout(() => {
+          const element = document.querySelector('#evaluation');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        const element = document.querySelector('#evaluation');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+    setIsMenuOpen(false);
+  };
+
   // Get navigation items based on user role
   const getNavigationItems = () => {
     const commonItems = [
       { path: '/', label: 'Home', icon: '🏠' },
       { path: '/gallery', label: 'Gallery', icon: '🖼️' },
+      { path: '/#evaluation', label: 'Evaluation Criteria', icon: '⭐', isScroll: true },
     ];
 
     if (!isAuthenticated) {
@@ -108,6 +130,19 @@ function Navigation() {
                       <span>{item.label}</span>
                     </Link>
                   </Button>
+                );
+              }
+
+              if (item.isScroll) {
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavClick(item)}
+                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-gray-800/50"
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
                 );
               }
 
@@ -222,6 +257,19 @@ function Navigation() {
                         <span>{item.label}</span>
                       </Link>
                     </Button>
+                  );
+                }
+
+                if (item.isScroll) {
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={() => handleNavClick(item)}
+                      className="w-full text-left block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-3 text-gray-300 hover:text-white hover:bg-gray-800/50"
+                    >
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </button>
                   );
                 }
 

@@ -37,7 +37,12 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
       setIsAuthenticated(true);
       
-      return { success: true };
+      // Set a flag for faculty invitation display
+      if (user.role === 'faculty') {
+        localStorage.setItem('showFacultyInvitation', 'true');
+      }
+      
+      return { success: true, user };
     } catch (error) {
       console.error('❌ Login error:', error);
       console.error('📄 Error response:', error.response?.data);
