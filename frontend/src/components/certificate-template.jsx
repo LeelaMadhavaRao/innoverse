@@ -12,226 +12,323 @@ const CertificateTemplate = ({
 }) => {
   return (
     <div 
-      className="certificate-container relative w-[1400px] h-[1000px] mx-auto bg-white shadow-2xl"
+      className="certificate-container relative w-full max-w-4xl mx-auto bg-white shadow-2xl"
       style={{
-        border: '8px solid #1e40af',
+        aspectRatio: '4/3',
+        maxHeight: '75vh',
+        border: '8px solid #ff6b35',
         borderImage: 'none',
-        background: 'white',
+        background: 'linear-gradient(135deg, #fefefe 0%, #f9f9f9 50%, #fefefe 100%)',
         fontFamily: 'Times New Roman, serif',
-        color: '#000000'
+        color: '#000000',
+        overflow: 'hidden',
+        boxShadow: '0 20px 60px rgba(255, 107, 53, 0.3), 0 8px 32px rgba(0, 0, 0, 0.1)',
+        margin: '20px auto'
       }}
     >
       {/* Main Certificate Border */}
-      <div className="absolute inset-4 rounded-lg bg-white" style={{border: '4px double #1e40af'}}>
-        <div className="absolute inset-4 rounded-lg bg-white" style={{border: '2px dotted #7c3aed'}}>
+      <div className="absolute inset-1 rounded-lg" style={{border: '4px double #e74c3c', background: 'linear-gradient(to bottom, #ffffff, #fefdf8)', boxShadow: 'inset 0 2px 10px rgba(231, 76, 60, 0.1)'}}>
+        <div className="absolute inset-1 rounded-lg" style={{border: '2px dotted #d68910', background: 'linear-gradient(45deg, transparent 48%, rgba(214, 137, 16, 0.1) 50%, transparent 52%)', backgroundSize: '15px 15px'}}>
           
-          {/* Corner Decorations */}
-          <div className="absolute top-2 left-2 w-12 h-12 rounded-full" style={{border: '4px solid #1e40af', opacity: '0.7'}}></div>
-          <div className="absolute top-2 right-2 w-12 h-12 rounded-full" style={{border: '4px solid #7c3aed', opacity: '0.7'}}></div>
-          <div className="absolute bottom-2 left-2 w-12 h-12 rounded-full" style={{border: '4px solid #1e40af', opacity: '0.7'}}></div>
-          <div className="absolute bottom-2 right-2 w-12 h-12 rounded-full" style={{border: '4px solid #7c3aed', opacity: '0.7'}}></div>
+          {/* Elegant Corner Decorations */}
+          {/* Simple Elegant Corner Decorations */}
+          {/* Top Left */}
+          <div className="absolute top-2 left-2 w-6 h-6 pointer-events-none" style={{zIndex: '10'}}>
+            <div className="relative w-full h-full">
+              <div className="w-full h-full rounded-full" style={{
+                background: 'linear-gradient(135deg, #ff6b35, #e74c3c)',
+                border: '2px solid #c0392b',
+                boxShadow: '0 2px 6px rgba(255, 107, 53, 0.3)'
+              }}></div>
+              <div className="absolute inset-1 rounded-full" style={{
+                background: 'linear-gradient(135deg, #ffffff, #fdf2e9)',
+                border: '1px solid #f39c12'
+              }}></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-orange-600 font-bold text-xs">✦</div>
+            </div>
+          </div>
 
-          {/* Header Section */}
-          <div className="flex items-center justify-between px-8 pt-6 pb-4">
-            {/* Left Logo */}
-            <div className="flex-shrink-0">
-              <img 
-                src="/srkr_logo.png" 
-                alt="SRKR College Logo" 
-                className="w-20 h-20 object-contain drop-shadow-lg"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <div className="w-20 h-20 bg-blue-100 rounded-full hidden items-center justify-center">
-                <span className="text-blue-700 font-bold text-xs">SRKR</span>
+          {/* Top Right */}
+          <div className="absolute top-2 right-2 w-6 h-6 pointer-events-none" style={{zIndex: '10'}}>
+            <div className="relative w-full h-full">
+              <div className="w-full h-full rounded-full" style={{
+                background: 'linear-gradient(135deg, #d68910, #ff6b35)',
+                border: '2px solid #b7950b',
+                boxShadow: '0 2px 6px rgba(214, 137, 16, 0.3)'
+              }}></div>
+              <div className="absolute inset-1 rounded-full" style={{
+                background: 'linear-gradient(135deg, #ffffff, #fdf2e9)',
+                border: '1px solid #e67e22'
+              }}></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-orange-600 font-bold text-xs">✧</div>
+            </div>
+          </div>
+
+          {/* Bottom Left */}
+          <div className="absolute bottom-2 left-2 w-6 h-6 pointer-events-none" style={{zIndex: '10'}}>
+            <div className="relative w-full h-full">
+              <div className="w-full h-full rounded-full" style={{
+                background: 'linear-gradient(135deg, #ff6b35, #c0392b)',
+                border: '2px solid #922b21',
+                boxShadow: '0 2px 6px rgba(255, 107, 53, 0.3)'
+              }}></div>
+              <div className="absolute inset-1 rounded-full" style={{
+                background: 'linear-gradient(135deg, #ffffff, #fdf2e9)',
+                border: '1px solid #d35400'
+              }}></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-orange-600 font-bold text-xs">★</div>
+            </div>
+          </div>
+
+          {/* Bottom Right */}
+          <div className="absolute bottom-2 right-2 w-6 h-6 pointer-events-none" style={{zIndex: '10'}}>
+            <div className="relative w-full h-full">
+              <div className="w-full h-full rounded-full" style={{
+                background: 'linear-gradient(135deg, #c0392b, #ff6b35)',
+                border: '2px solid #a93226',
+                boxShadow: '0 2px 6px rgba(192, 57, 43, 0.3)'
+              }}></div>
+              <div className="absolute inset-1 rounded-full" style={{
+                background: 'linear-gradient(135deg, #ffffff, #fdf2e9)',
+                border: '1px solid #e74c3c'
+              }}></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-orange-600 font-bold text-xs">❋</div>
+            </div>
+          </div>          {/* Subtle Corner Accent Lines */}
+          <div className="absolute top-2 left-2 w-6 h-6" style={{zIndex: '5'}}>
+            <div className="w-full h-0.5" style={{background: 'linear-gradient(to right, #ff6b35, transparent)'}}></div>
+            <div className="w-0.5 h-full" style={{background: 'linear-gradient(to bottom, #ff6b35, transparent)'}}></div>
+          </div>
+          <div className="absolute top-2 right-2 w-6 h-6" style={{zIndex: '5'}}>
+            <div className="w-full h-0.5 ml-auto" style={{background: 'linear-gradient(to left, #e74c3c, transparent)'}}></div>
+            <div className="w-0.5 h-full ml-auto" style={{background: 'linear-gradient(to bottom, #e74c3c, transparent)'}}></div>
+          </div>
+          <div className="absolute bottom-2 left-2 w-6 h-6" style={{zIndex: '5'}}>
+            <div className="w-0.5 h-full" style={{background: 'linear-gradient(to top, #d68910, transparent)'}}></div>
+            <div className="w-full h-0.5 mt-auto" style={{background: 'linear-gradient(to right, #d68910, transparent)'}}></div>
+          </div>
+          <div className="absolute bottom-2 right-2 w-6 h-6" style={{zIndex: '5'}}>
+            <div className="w-0.5 h-full ml-auto" style={{background: 'linear-gradient(to top, #c0392b, transparent)'}}></div>
+            <div className="w-full h-0.5 mt-auto ml-auto" style={{background: 'linear-gradient(to left, #c0392b, transparent)'}}></div>
+          </div>
+
+          {/* Header Section with Logos tightly beside the title (not at edges) */}
+          <div className="px-2 pt-2 pb-1 mt-2 relative" style={{zIndex: '20'}}>
+            <div className="mx-auto flex items-center justify-center gap-2" style={{maxWidth: '900px'}}>
+              {/* Left Logos: SRKR + IDEALAB */}
+              <div className="flex items-center gap-1">
+                <img
+                  src="/srkr_logo.png"
+                  alt="SRKR Logo"
+                  className="certificate-logo"
+                  onError={(e) => { e.currentTarget.src = '/srkr_logo.jpg'; e.currentTarget.onerror = null; }}
+                  style={{ height: '38px', width: 'auto', objectFit: 'contain' }}
+                />
+                <img
+                  src="/idealab_logo.png"
+                  alt="IDEALAB Logo"
+                  className="certificate-logo"
+                  onError={(e) => { e.currentTarget.src = '/idealab_logo.jpg'; e.currentTarget.onerror = null; }}
+                  style={{ height: '38px', width: 'auto', objectFit: 'contain' }}
+                />
               </div>
-            </div>
 
-            {/* College Name */}
-            <div className="flex-1 text-center mx-6">
-              <h1 className="text-2xl font-bold mb-1 tracking-wide" style={{color: '#dc2626'}}>
-                SAGI RAMAKRISHNAM RAJU ENGINEERING COLLEGE
-              </h1>
-              <h2 className="text-lg font-semibold mb-1" style={{color: '#7c3aed'}}>(AUTONOMOUS)</h2>
-              <p className="text-sm leading-relaxed" style={{color: '#000000'}}>
-                SRKR Marg, Chinnaamiram, Bhimavaram-534204, AP, India
-              </p>
-            </div>
+              {/* College Name - Centered */}
+              <div className="text-center px-2">
+                <h1 className="text-base md:text-lg lg:text-xl font-bold mb-0.5 tracking-wide" style={{color: '#dc2626'}}>
+                  SAGI RAMAKRISHNAM RAJU ENGINEERING COLLEGE
+                </h1>
+                <h2 className="text-xs font-semibold mb-0.5" style={{color: '#7c3aed'}}>(AUTONOMOUS)</h2>
+                <p className="text-xs leading-tight" style={{color: '#000000'}}>
+                  SRKR Marg, Chinnaamiram, Bhimavaram-534204, AP, India
+                </p>
+              </div>
 
-            {/* Right Logo */}
-            <div className="flex-shrink-0">
-              <img 
-                src="/event_logo.png" 
-                alt="Event Logo" 
-                className="w-20 h-20 object-contain drop-shadow-lg"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <div className="w-20 h-20 bg-purple-100 rounded-full hidden items-center justify-center">
-                <span className="text-purple-700 font-bold text-xs">EVENT</span>
+              {/* Right Logo: INNOVERSE (smaller) */}
+              <div className="flex items-center">
+                <img
+                  src="/innoverse_logo.jpg"
+                  alt="Innoverse Logo"
+                  className="certificate-logo"
+                  style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Decorative Line */}
-          <div className="flex justify-center px-8 mb-6">
-            <div className="w-full h-0.5 rounded-full" style={{background: 'linear-gradient(to right, transparent, #7c3aed, transparent)'}}></div>
+          {/* Simple Decorative Line */}
+          <div className="flex justify-center px-4 mb-0.5 relative" style={{zIndex: '20'}}>
+            <div className="w-full max-w-md h-0.5 rounded-full" style={{background: 'linear-gradient(to right, transparent, #ff6b35 20%, #e74c3c 50%, #d68910 80%, transparent)'}}></div>
           </div>
 
           {/* Certificate Title */}
-          <div className="text-center mb-6">
-            <div className="relative">
-              <h2 className="text-4xl font-bold mb-3 tracking-wider" style={{color: '#1e40af'}}>
-                CERTIFICATE OF MERIT
+          <div className="text-center mb-1 px-3 relative" style={{zIndex: '20'}}>
+            <div className="relative p-1 certificate-title-bar">
+              {/* Main title */}
+              <h2 className="text-xs font-bold mb-0.5 tracking-wide relative z-10" style={{
+                color: '#7c2d12',
+                textShadow: '1px 1px 2px rgba(0, 0, 0, 0.4)',
+                fontFamily: 'serif',
+                letterSpacing: '0.02em'
+              }}>
+                CERTIFICATE OF EXCELLENCE
               </h2>
-            </div>
-            <div className="flex justify-center items-center space-x-3 mt-4">
-              <div className="w-16 h-0.5" style={{background: 'linear-gradient(to right, transparent, #7c3aed)'}}></div>
-              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{border: '2px solid #7c3aed'}}>
-                <div className="w-3 h-3 rounded-full" style={{backgroundColor: '#7c3aed'}}></div>
-              </div>
-              <div className="w-16 h-0.5" style={{background: 'linear-gradient(to left, transparent, #7c3aed)'}}></div>
+              
+              {/* Subtitle */}
+              <p className="text-xs font-medium tracking-wide relative z-10" style={{ color: '#7c2d12', letterSpacing: '0.01em' }}>
+                In recognition of outstanding achievement
+              </p>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="px-12 mb-6">
-            <div className="text-center text-gray-700 leading-relaxed">
-              <p className="text-lg mb-6" style={{color: '#1e40af'}}>
+          <div className="px-3 mb-0.5 relative" style={{zIndex: '20'}}>
+            <div className="text-center text-gray-700 leading-tight">
+              <p className="text-xs mb-0.5 font-medium" style={{color: '#1e40af'}}>
                 This is to certify that
               </p>
               
               {/* Student Name */}
-              <div className="mb-6">
-                <div className="relative inline-block min-w-[400px]">
+              <div className="mb-0.5">
+                <div className="relative inline-block min-w-[150px] md:min-w-[180px]">
                   {!isBlankTemplate && studentName ? (
-                    <h3 className="text-3xl font-bold tracking-wide px-6 py-3 border-b-4 border-double rounded-lg shadow-md" style={{color: '#1e40af', borderColor: '#1e40af', background: 'linear-gradient(to right, #dbeafe, #e0e7ff)'}}>
+                    <h3 className="text-sm font-bold tracking-wide certificate-chip chip-blue">
                       {studentName}
                     </h3>
                   ) : (
-                    <div className="border-b-4 border-double pb-3 mb-2 min-h-[50px] flex items-center justify-center" style={{borderColor: '#1e40af'}}>
-                      <span className="text-lg font-medium" style={{color: '#1e40af'}}>
-                        {isBlankTemplate ? "" : "Student Name Required"}
-                      </span>
-                    </div>
+                    <h3 className="text-sm font-bold tracking-wide certificate-chip chip-blue">
+                      {isBlankTemplate ? "___________________________" : "STUDENT NAME"}
+                    </h3>
                   )}
                 </div>
               </div>
 
               {/* Registration Number */}
-              <div className="mb-6">
-                <p className="text-lg mb-3" style={{color: '#1e40af'}}>Registration Number:</p>
-                <div className="inline-block min-w-[300px]">
+              <div className="mb-0.5">
+                <p className="text-xs text-gray-600 mb-0.5">Registration Number:</p>
+                <div className="relative inline-block min-w-[100px] md:min-w-[130px]">
                   {!isBlankTemplate && registrationNumber ? (
-                    <div className="px-5 py-2 border-2 rounded-lg font-mono text-lg font-bold shadow-md" style={{color: '#1e40af', borderColor: '#1e40af', background: 'linear-gradient(to right, #dbeafe, #e0e7ff)'}}>
+                    <p className="text-xs font-semibold certificate-chip chip-purple">
                       {registrationNumber}
-                    </div>
+                    </p>
                   ) : (
-                    <div className="border-b-2 pb-2 min-h-[35px] flex items-center justify-center" style={{borderColor: '#1e40af'}}>
-                      <span className="text-base font-medium" style={{color: '#1e40af'}}>
-                        {isBlankTemplate ? "" : "Registration Number Required"}
-                      </span>
-                    </div>
+                    <p className="text-xs font-semibold certificate-chip chip-purple">
+                      {isBlankTemplate ? "_____________________" : "REGISTRATION NUMBER"}
+                    </p>
                   )}
                 </div>
               </div>
 
-              <p className="text-lg leading-relaxed mb-3" style={{color: '#374151'}}>
-                has successfully demonstrated exceptional performance and merit in their academic pursuits 
-                during the <strong>INNOVERSE 2025</strong> event held on <strong>15th September 2025</strong> 
-                and is hereby recognized for their outstanding achievements in the field of Computer Science 
-                and Information Technology.
-              </p>
-
-              <p className="text-lg mb-6" style={{color: '#374151'}}>
-                This certificate is awarded in recognition of their dedication, hard work, and excellence.
-              </p>
-            </div>
-          </div>
-
-          {/* Signatures Section - Within Border */}
-          <div className="px-12 mb-6">
-            <div className="grid grid-cols-2 gap-12 items-end">
-              {/* HOD CSIT Signature */}
-              <div className="text-center">
-                <div className="mb-3 pb-8 relative min-h-[60px]">
-                  <div className="border-b-2 mb-2 pb-2 min-h-[40px] flex items-center justify-center" style={{borderColor: '#1e40af'}}>
-                    <span className="text-xs font-medium" style={{color: '#1e40af'}}>
-                      {isBlankTemplate ? "" : "Signature"}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-1 p-2 rounded-lg border" style={{borderColor: '#1e40af', background: 'linear-gradient(to bottom, #dbeafe, #ffffff)'}}>
-                  {!isBlankTemplate && hodCSITName ? (
-                    <>
-                      <p className="font-bold text-sm" style={{color: '#1e40af'}}>{hodCSITName}</p>
-                      <p className="text-xs font-semibold" style={{color: '#7c3aed'}}>Head of Department</p>
-                      <p className="text-xs font-medium" style={{color: '#7c3aed'}}>Computer Science & IT</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="border-b mb-1 min-h-[20px] flex items-center justify-center" style={{borderColor: '#1e40af'}}>
-                        <span className="text-xs font-medium" style={{color: '#1e40af'}}>
-                          {isBlankTemplate ? "Prof. N Gopi Krishna Murthy" : "Prof. N Gopi Krishna Murthy"}
-                        </span>
-                      </div>
-                      <p className="text-xs font-semibold" style={{color: '#7c3aed'}}>Head of Department</p>
-                      <p className="text-xs font-medium" style={{color: '#7c3aed'}}>Computer Science & IT</p>
-                    </>
-                  )}
-                </div>
+              {/* Achievement Text - Concise */}
+              <div className="mb-0.5">
+                <p className="text-xs leading-tight max-w-2xl mx-auto" style={{color: '#374151'}}>
+                  has demonstrated exceptional innovation and technical excellence during
+                  {' '}
+                  <span className="font-bold certificate-chip chip-blue">INNOVERSE 2025</span>
+                  {' '}held on{' '}
+                  <span className="font-semibold certificate-chip chip-purple">September 15th, 2025</span>.
+                </p>
               </div>
 
-              {/* HOD CSD Signature */}
-              <div className="text-center">
-                <div className="mb-3 pb-8 relative min-h-[60px]">
-                  <div className="border-b-2 mb-2 pb-2 min-h-[40px] flex items-center justify-center" style={{borderColor: '#1e40af'}}>
-                    <span className="text-xs font-medium" style={{color: '#1e40af'}}>
-                      {isBlankTemplate ? "" : "Signature"}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-1 p-2 rounded-lg border" style={{borderColor: '#7c3aed', background: 'linear-gradient(to bottom, #f3e8ff, #ffffff)'}}>
-                  {!isBlankTemplate && hodCSDName ? (
-                    <>
-                      <p className="font-bold text-sm" style={{color: '#1e40af'}}>{hodCSDName}</p>
-                      <p className="text-xs font-semibold" style={{color: '#7c3aed'}}>Head of Department</p>
-                      <p className="text-xs font-medium" style={{color: '#7c3aed'}}>Computer Science & Design</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="border-b mb-1 min-h-[20px] flex items-center justify-center" style={{borderColor: '#1e40af'}}>
-                        <span className="text-xs font-medium" style={{color: '#1e40af'}}>
-                          {isBlankTemplate ? "Prof. M Suresh Babu" : "Prof. M Suresh Babu"}
-                        </span>
-                      </div>
-                      <p className="text-xs font-semibold" style={{color: '#7c3aed'}}>Head of Department</p>
-                      <p className="text-xs font-medium" style={{color: '#7c3aed'}}>Computer Science & Design</p>
-                    </>
-                  )}
-                </div>
+              {/* Recognition Statement - Concise */}
+              <div className="mb-0.5">
+                <p className="text-xs leading-tight max-w-2xl mx-auto" style={{color: '#374151'}}>
+                  This recognition acknowledges outstanding contributions in Entrepreneurship, Innovation, and Technology
+                  in <br></br>
+                  <span className="font-semibold certificate-chip chip-blue">Computer Science and Information Technology</span>.
+                </p>
               </div>
-            </div>
-          </div>
 
-          {/* Date */}
-          <div className="px-12 mb-4">
-            <div className="text-right">
-              <div className="inline-block px-4 py-2 rounded-lg border-2" style={{borderColor: '#1e40af', background: 'linear-gradient(to right, #dbeafe, #e0e7ff)'}}>
-                <p className="text-sm font-semibold" style={{color: '#1e40af'}}>
-                  Date: 15th September 2025
+              {/* Award Statement - Concise */}
+              <div className="mb-0.5 relative">
+                <p className="text-xs font-medium relative z-10" style={{color: '#7c3aed'}}>
+                  ✦ Awarded with highest commendation for continued excellence ✦
                 </p>
               </div>
             </div>
           </div>
 
+          {/* Signatures Section */}
+          <div className="absolute left-0 right-0 px-3 relative" style={{bottom: '-40px', zIndex: '20'}}>
+            <div className="flex justify-around items-end">
+              {/* HOD CSD Signature - 20% width (LEFT) */}
+              <div className="text-center" style={{width: '20%', minWidth: '90px'}}>
+                <div className="mb-0.5 pb-0.5 relative min-h-[6px]">
+                  <div className="border-b mb-0.5 pb-0.5 min-h-[4px] flex items-center justify-center" style={{borderColor: '#1e40af'}}>
+                    <span className="text-xs font-medium" style={{color: '#1e40af'}}>
+                      {isBlankTemplate ? "" : "Signature"}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-0 p-0.5 rounded border text-center" style={{borderColor: '#7c3aed', background: 'linear-gradient(to bottom, #f3e8ff, #ffffff)'}}>
+                  {!isBlankTemplate && hodCSDName ? (
+                    <>
+                      <p className="font-bold text-xs leading-tight" style={{color: '#1e40af'}}>{hodCSDName}</p>
+                      <p className="text-xs font-semibold leading-tight" style={{color: '#7c3aed'}}>Prof. & Head</p>
+                      <p className="text-xs leading-tight" style={{color: '#7c3aed'}}>CSD</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-bold text-xs leading-tight" style={{color: '#1e40af'}}>
+                        Prof. M Suresh Babu
+                      </p>
+                      <p className="text-xs font-semibold leading-tight" style={{color: '#7c3aed'}}>Prof. & Head</p>
+                      <p className="text-xs leading-tight" style={{color: '#7c3aed'}}>CSD</p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* HOD CSIT Signature - 20% width (MIDDLE) */}
+              <div className="text-center" style={{width: '20%', minWidth: '90px'}}>
+                <div className="mb-0.5 pb-0.5 relative min-h-[6px]">
+                  <div className="border-b mb-0.5 pb-0.5 min-h-[4px] flex items-center justify-center" style={{borderColor: '#1e40af'}}>
+                    <span className="text-xs font-medium" style={{color: '#1e40af'}}>
+                      {isBlankTemplate ? "" : "Signature"}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-0 p-0.5 rounded border text-center" style={{borderColor: '#1e40af', background: 'linear-gradient(to bottom, #dbeafe, #ffffff)'}}>
+                  {!isBlankTemplate && hodCSITName ? (
+                    <>
+                      <p className="font-bold text-xs leading-tight" style={{color: '#1e40af'}}>{hodCSITName}</p>
+                      <p className="text-xs font-semibold leading-tight" style={{color: '#7c3aed'}}>Prof. & Head</p>
+                      <p className="text-xs leading-tight" style={{color: '#7c3aed'}}>CSIT</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-bold text-xs leading-tight" style={{color: '#1e40af'}}>
+                        Prof. N Gopi Krishna Murthy
+                      </p>
+                      <p className="text-xs font-semibold leading-tight" style={{color: '#7c3aed'}}>Prof. & Head</p>
+                      <p className="text-xs leading-tight" style={{color: '#7c3aed'}}>CSIT</p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Principal Signature - 20% width (RIGHT) */}
+              <div className="text-center" style={{width: '20%', minWidth: '90px'}}>
+                <div className="mb-0.5 pb-0.5 relative min-h-[6px]">
+                  <div className="border-b mb-0.5 pb-0.5 min-h-[4px] flex items-center justify-center text-xs" style={{borderColor: '#dc2626'}}>
+                    <span className="text-xs font-medium" style={{color: '#dc2626'}}>
+                      {isBlankTemplate ? "" : "Signature"}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-0 p-0.5 rounded border text-center" style={{borderColor: '#dc2626', background: 'linear-gradient(to bottom, #fef2f2, #ffffff)'}}>
+                  <p className="font-bold text-xs leading-tight" style={{color: '#dc2626'}}>
+                    Dr. K.V. Murali Krishnam Raju
+                  </p>
+                  <p className="text-xs font-semibold leading-tight" style={{color: '#7c3aed'}}>Principal <br></br>SRKREC</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-7xl font-bold select-none transform rotate-12" style={{color: '#dbeafe', opacity: 0.2}}>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{zIndex: '1'}}>
+            <div className="text-7xl font-bold select-none transform rotate-12" style={{color: '#dbeafe', opacity: 0.1, zIndex: '1'}}>
               SRKR ENGINEERING COLLEGE
             </div>
           </div>
@@ -249,86 +346,99 @@ const CertificateGenerator = () => {
     hodCSITName: 'Prof. N Gopi Krishna Murthy',
     hodCSDName: 'Prof. M Suresh Babu'
   });
+
   const [showPreview, setShowPreview] = useState(false);
   const certificateRef = useRef(null);
   const blankCertificateRef = useRef(null);
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [name]: value
     }));
   };
 
   const handleDownload = async (isBlank = false) => {
-    // Validation for filled certificate
-    if (!isBlank && (!formData.studentName.trim() || !formData.registrationNumber.trim())) {
-      alert('Please fill in Student Name and Registration Number before downloading the filled certificate.');
-      return;
-    }
-
     try {
-      // Import html2canvas dynamically
       const html2canvas = (await import('html2canvas')).default;
       
+      let targetElement;
       if (isBlank) {
-        // Make blank template visible temporarily
-        const blankElement = blankCertificateRef.current;
-        if (blankElement) {
-          const parentElement = blankElement.parentElement;
+        targetElement = blankCertificateRef.current;
+        // Temporarily make the blank template visible and properly positioned
+        if (targetElement) {
+          const parentContainer = targetElement.parentElement;
+          const originalParentStyle = parentContainer.style.cssText;
+          const originalStyle = targetElement.style.cssText;
           
-          // Temporarily make it visible and positioned correctly
-          const originalStyle = parentElement.style.cssText;
-          parentElement.style.position = 'fixed';
-          parentElement.style.top = '0';
-          parentElement.style.left = '0';
-          parentElement.style.zIndex = '9999';
-          parentElement.style.visibility = 'visible';
-          parentElement.style.backgroundColor = 'white';
+          // Make parent visible and position it properly
+          parentContainer.style.cssText = `
+            display: block !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            background: white !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          `;
           
-          // Wait for rendering
-          await new Promise(resolve => setTimeout(resolve, 300));
+          // Make target element visible and centered
+          targetElement.style.cssText = `
+            display: block !important;
+            position: relative !important;
+            margin: 20px auto !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            max-width: 1400px !important;
+            width: 100% !important;
+          `;
           
-          const canvas = await html2canvas(blankElement, {
-            scale: 3,
-            backgroundColor: '#ffffff',
+          // Wait for rendering and layout
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const canvas = await html2canvas(targetElement, {
+            width: targetElement.offsetWidth || 1400,
+            height: targetElement.offsetHeight || 1000,
+            scale: 2,
             useCORS: true,
             allowTaint: true,
-            width: 1400,
-            height: 1000,
-            scrollX: 0,
-            scrollY: 0,
-            logging: false,
-            foreignObjectRendering: true
+            backgroundColor: '#ffffff',
+            removeContainer: false,
+            foreignObjectRendering: false,
+            logging: false
           });
           
-          // Restore original positioning
-          parentElement.style.cssText = originalStyle;
+          // Restore original styles
+          parentContainer.style.cssText = originalParentStyle;
+          targetElement.style.cssText = originalStyle;
           
           const link = document.createElement('a');
-          link.download = `SRKR_Merit_Certificate_Blank_Template_2025.png`;
-          link.href = canvas.toDataURL('image/png', 1.0);
+          link.download = 'SRKR_Excellence_Certificate_Blank_Template_2025.png';
+          link.href = canvas.toDataURL();
           link.click();
         }
       } else {
-        // For filled certificate, use the existing ref
-        if (certificateRef.current) {
-          const canvas = await html2canvas(certificateRef.current, {
-            scale: 3,
-            backgroundColor: '#ffffff',
+        targetElement = certificateRef.current;
+        if (targetElement) {
+          const canvas = await html2canvas(targetElement, {
+            width: targetElement.offsetWidth || 1400,
+            height: targetElement.offsetHeight || 1000,
+            scale: 2,
             useCORS: true,
             allowTaint: true,
-            width: 1400,
-            height: 1000,
-            scrollX: 0,
-            scrollY: 0,
-            logging: false,
-            foreignObjectRendering: true
+            backgroundColor: '#ffffff',
+            removeContainer: false,
+            foreignObjectRendering: false,
+            logging: false
           });
           
           const link = document.createElement('a');
-          link.download = `SRKR_Merit_Certificate_${formData.studentName.replace(/[^a-zA-Z0-9]/g, '_') || 'Student'}_2025.png`;
-          link.href = canvas.toDataURL('image/png', 1.0);
+          link.download = `SRKR_Excellence_Certificate_${formData.studentName.replace(/[^a-zA-Z0-9]/g, '_') || 'Student'}_2025.png`;
+          link.href = canvas.toDataURL();
           link.click();
         }
       }
@@ -338,160 +448,160 @@ const CertificateGenerator = () => {
     }
   };
 
+  const validateForm = () => {
+    if (!formData.studentName.trim()) {
+      alert('Please enter student name');
+      return false;
+    }
+    if (!formData.registrationNumber.trim()) {
+      alert('Please enter registration number');
+      return false;
+    }
+    return true;
+  };
+
+  const handlePreview = () => {
+    if (validateForm()) {
+      setShowPreview(true);
+    }
+  };
+
+  const handleGenerateCertificate = () => {
+    if (validateForm()) {
+      handleDownload(false);
+    }
+  };
+
   return (
-    <div className="space-y-6 admin-form-container bg-gray-50 min-h-screen">
-      {/* Form Section */}
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 admin-form-container">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-900">
-            <FileText className="h-5 w-5 text-blue-600" />
-            Certificate Generator
-          </h2>
-          <p className="text-sm text-gray-600 mt-2">
-            Generate both filled certificates for specific students and blank templates for hard copy printing.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">Certificate Generator</h1>
+          <p className="text-gray-600">Generate professional certificates for INNOVERSE 2025</p>
         </div>
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Form Section */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Certificate Details</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="studentName" className="block text-sm font-medium text-gray-700 mb-1">
-                Student Name
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Student Name *
               </label>
               <input
                 type="text"
-                id="studentName"
+                name="studentName"
                 value={formData.studentName}
-                onChange={(e) => handleInputChange('studentName', e.target.value)}
-                placeholder="Enter full name of the student"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter student full name"
+                required
               />
             </div>
+
             <div>
-              <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                Registration Number
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Registration Number *
               </label>
               <input
                 type="text"
-                id="registrationNumber"
+                name="registrationNumber"
                 value={formData.registrationNumber}
-                onChange={(e) => handleInputChange('registrationNumber', e.target.value)}
-                placeholder="e.g., 21A21A0501"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter registration number"
+                required
               />
             </div>
+
             <div>
-              <label htmlFor="hodCSIT" className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 HOD CSIT Name
               </label>
               <input
                 type="text"
-                id="hodCSIT"
+                name="hodCSITName"
                 value={formData.hodCSITName}
-                onChange={(e) => handleInputChange('hodCSITName', e.target.value)}
-                placeholder="Prof. N Gopi Krishna Murthy"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Head of Department CSIT"
               />
             </div>
+
             <div>
-              <label htmlFor="hodCSD" className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 HOD CSD Name
               </label>
               <input
                 type="text"
-                id="hodCSD"
+                name="hodCSDName"
                 value={formData.hodCSDName}
-                onChange={(e) => handleInputChange('hodCSDName', e.target.value)}
-                placeholder="Prof. M Suresh Babu"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Head of Department CSD"
               />
             </div>
           </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 pt-4">
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-4 mt-8">
             <button
-              onClick={() => setShowPreview(!showPreview)}
-              className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onClick={handleGenerateCertificate}
+              className="flex items-center px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
             >
-              <Eye className="h-4 w-4" />
-              {showPreview ? 'Hide Preview' : 'Show Preview'}
+              <Download className="w-4 h-4 mr-2" />
+              Download Certificate
             </button>
-            
+
             <button
               onClick={() => handleDownload(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
             >
-              <Printer className="h-4 w-4" />
+              <FileText className="w-4 h-4 mr-2" />
               Download Blank Template
             </button>
-            
-            {(showPreview && formData.studentName.trim() && formData.registrationNumber.trim()) && (
-              <button
-                onClick={() => handleDownload(false)}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                <Download className="h-4 w-4" />
-                Download Filled Certificate
-              </button>
-            )}
+
+            <button
+              onClick={() => window.print()}
+              className="flex items-center px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print Certificate
+            </button>
           </div>
+        </div>
+
+        {/* Live Certificate Preview - Always Visible */}
+        <div className="bg-white rounded-lg shadow-lg p-4">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">Live Certificate Preview</h2>
           
-          <div className="text-sm text-gray-600 mt-4 p-4 bg-blue-50 rounded-lg">
-            <p className="font-semibold mb-2">📋 Certificate Options:</p>
-            <ul className="space-y-1 text-sm">
-              <li>• <strong>Blank Template:</strong> Download empty certificate for handwritten filling and hard copy printing</li>
-              <li>• <strong>Filled Certificate:</strong> Download with all details filled for digital use</li>
-              <li>• <strong>Rectangular Format:</strong> Optimized for standard printing (1400x1000px)</li>
-              <li>• <strong>Signature Fields:</strong> HOD CSIT and HOD CSD signature areas included within certificate border</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Hidden Blank Template for Download */}
-      <div style={{ 
-        position: 'absolute', 
-        top: '-10000px', 
-        left: '0',
-        width: '1400px',
-        height: '1000px',
-        backgroundColor: 'white',
-        visibility: 'hidden',
-        pointerEvents: 'none'
-      }}>
-        <div ref={blankCertificateRef}>
-          <CertificateTemplate
-            studentName=""
-            registrationNumber=""
-            hodCSITName="Prof. N Gopi Krishna Murthy"
-            hodCSDName="Prof. M Suresh Babu"
-            isBlankTemplate={true}
-          />
-        </div>
-      </div>
-
-      {/* Preview Section */}
-      {showPreview && (
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Certificate Preview</h2>
-            <p className="text-sm text-gray-600 mt-1">Preview of the filled certificate</p>
-          </div>
-          <div className="p-6">
-            <div className="overflow-x-auto bg-gray-100 p-4 rounded-lg">
-              <div ref={certificateRef}>
+          <div className="flex justify-center overflow-x-auto">
+            <div className="min-w-0 max-w-full">
+              <div ref={certificateRef} className="transform-gpu" style={{ minWidth: '800px' }}>
                 <CertificateTemplate
                   studentName={formData.studentName}
                   registrationNumber={formData.registrationNumber}
                   hodCSITName={formData.hodCSITName}
                   hodCSDName={formData.hodCSDName}
                   isPreview={true}
-                  isBlankTemplate={false}
                 />
               </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Hidden Blank Template for Download */}
+        <div style={{ display: 'none' }}>
+          <div ref={blankCertificateRef}>
+            <CertificateTemplate
+              isBlankTemplate={true}
+              hodCSITName={formData.hodCSITName}
+              hodCSDName={formData.hodCSDName}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

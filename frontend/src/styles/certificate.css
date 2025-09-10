@@ -5,7 +5,7 @@
   color: #333;
   page-break-inside: avoid;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   width: 1400px;
   height: 1000px;
   box-sizing: border-box;
@@ -84,7 +84,8 @@
   animation: certificateGlow 3s ease-in-out infinite;
 }
 
-/* Animation Effects */
+/* Animation Effects - Removed to prevent fading issues */
+/* Commented out fadeIn animation to prevent content fading
 .certificate-container {
   animation: fadeIn 0.5s ease-in-out;
 }
@@ -99,6 +100,7 @@
     transform: translateY(0);
   }
 }
+*/
 
 /* Typography */
 .certificate-title {
@@ -397,4 +399,51 @@
 
 .admin-form-container .text-gray-900 {
   color: #111827 !important;
+}
+
+/* Certificate header logos */
+.certificate-logo {
+  display: inline-block;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
+}
+
+.certificate-container .header-logos {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Reusable chips for consistent backgrounds (name, reg no, event, date, branch) */
+.certificate-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.chip-blue {
+  background: #dbeafe; /* sky-100 */
+  border: 1px solid #1e40af; /* blue-900 */
+  color: #1e40af;
+}
+
+.chip-purple {
+  background: #f3e8ff; /* purple-100 */
+  border: 1px solid #7c3aed; /* violet-600 */
+  color: #7c3aed;
+}
+
+.chip-orange-soft {
+  background: #ffedd5; /* orange-100 */
+  border: 1px solid #fb923c; /* orange-400 */
+  color: #9a3412; /* orange-900 */
+}
+
+/* Title bar softer gradient */
+.certificate-title-bar {
+  background: linear-gradient(135deg, #ffedd5, #fdba74, #fecaca);
+  border: 1px solid #fb923c;
+  box-shadow: 0 1px 2px rgba(251, 146, 60, 0.25);
+  border-radius: 6px;
 }
