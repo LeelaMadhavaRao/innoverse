@@ -3,12 +3,15 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { adminAPI } from '../../lib/api';
+import { useToast } from '../../hooks/use-toast';
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);
+  const [editingUser, setEditingUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const { addToast } = useToast();
 
   useEffect(() => {
     loadUsers();
@@ -20,19 +23,49 @@ function AdminUsers() {
       setUsers(response.data);
     } catch (error) {
       console.error('Failed to load users:', error);
+      console.error('Error response:', error.response?.data, 'status:', error.response?.status);
+      setUsers([]);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        window.location.href = '/login';
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+  if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        await adminAPI.deleteUser(userId);
+    await adminAPI.deleteUser(userId);
         loadUsers();
       } catch (error) {
         console.error('Failed to delete user:', error);
       }
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser({
+      _id: user._id || user.id,
+      name: user.name || '',
+      email: user.email || '',
+      role: user.role || ''
+    });
+  };
+
+  const submitEditUser = async (e) => {
+    e.preventDefault();
+    try {
+      await adminAPI.updateUser(editingUser._id, {
+        name: editingUser.name,
+        email: editingUser.email,
+        role: editingUser.role
+      });
+      setEditingUser(null);
+      loadUsers();
+    } catch (error) {
+      console.error('Failed to update user:', error);
+  addToast({ title: 'Error', description: 'Failed to update user', type: 'destructive' });
     }
   };
 
@@ -121,7 +154,7 @@ function AdminUsers() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredUsers.length > 0 ? (
           filteredUsers.map((user) => (
-            <Card key={user.id} className="bg-gray-800 border-gray-700 hover:border-emerald-500 transition-colors">
+            <Card key={user._id || user.id} className="bg-gray-800 border-gray-700 hover:border-emerald-500 transition-colors">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
@@ -132,7 +165,7 @@ function AdminUsers() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-white">{user.name || 'Unnamed User'}</h3>
-                      <p className="text-gray-400 text-sm">{user.email}</p>
+                      <p className="text-gray-400 text-sm break-all max-w-xs">{user.email}</p>
                     </div>
                   </div>
                   <Badge 
@@ -156,14 +189,15 @@ function AdminUsers() {
                   </div>
                   <div className="flex items-center text-sm text-gray-400">
                     <span className="mr-2">🔐</span>
-                    <span>Last login: {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</span>
+                    <span>Last login: {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never'}</span>
                   </div>
                 </div>
 
                 <div className="flex space-x-2">
                   <Button 
-                    size="sm"
+                    size="sm" 
                     variant="outline"
+                    onClick={() => handleEditUser(user)}
                     className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
                   >
                     Edit
@@ -171,7 +205,7 @@ function AdminUsers() {
                   <Button 
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDeleteUser(user.id)}
+                    onClick={() => handleDeleteUser(user._id || user.id)}
                     className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
                   >
                     Delete
@@ -227,6 +261,36 @@ function AdminUsers() {
           </div>
         </Card>
       </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setEditingUser(null)} />
+          <Card className="z-10 w-full max-w-lg">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Edit User</h3>
+              <form onSubmit={submitEditUser} className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Name</label>
+                  <input value={editingUser.name} onChange={(e) => setEditingUser({...editingUser, name: e.target.value})} className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Email</label>
+                  <input value={editingUser.email} onChange={(e) => setEditingUser({...editingUser, email: e.target.value})} className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded" />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-300 mb-1">Role</label>
+                  <input value={editingUser.role} onChange={(e) => setEditingUser({...editingUser, role: e.target.value})} className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded" />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+                  <Button type="submit">Save</Button>
+                </div>
+              </form>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

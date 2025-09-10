@@ -6,6 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Textarea } from '../../components/ui/textarea';
 import AdminLayout from '../../components/admin/admin-layout';
+import { useToast } from '../../hooks/use-toast';
 
 function AdminEvaluators() {
   const [evaluators, setEvaluators] = useState([]);
@@ -23,6 +24,7 @@ function AdminEvaluators() {
   useEffect(() => {
     fetchEvaluators();
   }, []);
+  const { addToast } = useToast();
 
   const fetchEvaluators = async () => {
     try {
@@ -100,10 +102,10 @@ function AdminEvaluators() {
       // Refresh evaluators list
       fetchEvaluators();
       
-      alert('Evaluator account created successfully! Invitation sent.');
+  addToast({ title: 'Success', description: 'Evaluator account created successfully! Invitation sent.', type: 'success' });
     } catch (error) {
       console.error('Error creating evaluator:', error);
-      alert('Error creating evaluator account. Please try again.');
+  addToast({ title: 'Error', description: 'Error creating evaluator account. Please try again.', type: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -144,16 +146,16 @@ function AdminEvaluators() {
           expertise: evaluator.expertise
         }
       });
-      alert('Invitation resent successfully!');
+  addToast({ title: 'Success', description: 'Invitation resent successfully!', type: 'success' });
     } catch (error) {
       console.error('Error resending invitation:', error);
-      alert('Error resending invitation.');
+  addToast({ title: 'Error', description: 'Error resending invitation.', type: 'destructive' });
     }
   };
 
   const assignTeams = (evaluatorId) => {
-    // This would open a modal to assign teams to evaluator
-    alert(`Assign teams to evaluator ${evaluatorId}`);
+  // This would open a modal to assign teams to evaluator
+  addToast({ title: 'Info', description: `Assign teams to evaluator ${evaluatorId}`, type: 'default' });
   };
 
   const containerVariants = {

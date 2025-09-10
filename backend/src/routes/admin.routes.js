@@ -7,11 +7,15 @@ import {
   getTeams,
   createTeam,
   resendTeamInvitation,
+  updateTeam,
+  deleteTeam,
   
   // Faculty Management
   getFaculty,
   createFaculty,
   resendFacultyInvitation,
+  updateFaculty,
+  deleteFaculty,
   
   // Evaluator Management
   getEvaluators,
@@ -60,6 +64,9 @@ router.route('/teams')
   .post(createTeam);
 
 router.post('/teams/:id/resend-invitation', resendTeamInvitation);
+router.route('/teams/:id')
+  .put(updateTeam)
+  .delete(deleteTeam);
 
 // Faculty Management Routes
 router.route('/faculty')
@@ -67,6 +74,9 @@ router.route('/faculty')
   .post(createFaculty);
 
 router.post('/faculty/:id/resend-invitation', resendFacultyInvitation);
+router.route('/faculty/:id')
+  .put(updateFaculty)
+  .delete(deleteFaculty);
 
 // Evaluator Management Routes
 router.route('/evaluators')

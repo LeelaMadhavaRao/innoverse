@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '../../hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -12,6 +13,7 @@ import Navigation from '../../components/navigation';
 
 function TeamProfile() {
   const { user, logout } = useAuth();
+  const { addToast } = useToast();
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -300,7 +302,7 @@ function TeamProfile() {
       // Check if team leader was changed - if so, logout the user
       if (response.data.changes && response.data.changes.teamLeaderChanged) {
         // Show success message first
-        alert('Team leader changed successfully! You will be logged out. New credentials have been sent to the new team leader\'s email.');
+        addToast({ title: 'Success', description: 'Team leader changed successfully! You will be logged out. New credentials have been sent to the new team leader\'s email.', type: 'success' });
         
         // Logout the user after a short delay
         setTimeout(() => {

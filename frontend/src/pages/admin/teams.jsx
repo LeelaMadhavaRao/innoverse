@@ -26,6 +26,7 @@ function AdminTeams() {
     members: [],
     projectIdea: ''
   });
+  const [editingTeam, setEditingTeam] = useState(null);
 
   useEffect(() => {
     fetchTeams();
@@ -38,11 +39,18 @@ function AdminTeams() {
       setTeams(response.data || []);
     } catch (error) {
       console.error('❌ Error fetching teams:', error);
+      console.error('❌ Error response data:', error.response?.data, 'status:', error.response?.status);
       toast({
         title: 'Error',
         description: 'Failed to fetch teams',
         variant: 'destructive',
       });
+      // clear list to avoid stale UI
+      setTeams([]);
+      // If unauthorized or forbidden, redirect to login
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        window.location.href = '/login';
+      }
     } finally {
       setLoading(false);
     }
@@ -180,6 +188,39 @@ function AdminTeams() {
         description: 'Failed to resend invitation',
         type: 'destructive',
       });
+    }
+  };
+
+  const handleDeleteTeam = async (teamId) => {
+    if (!window.confirm('Delete this team and its user account?')) return;
+    try {
+      await adminAPI.deleteTeam(teamId);
+      toast({ title: 'Deleted', description: 'Team removed', type: 'success' });
+      fetchTeams();
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      toast({ title: 'Error', description: 'Failed to delete team', type: 'destructive' });
+    }
+  };
+
+  const handleEditTeam = (team) => {
+    setEditingTeam({
+      _id: team._id,
+      teamName: team.teamName,
+      leaderEmail: team.teamLeader?.email || ''
+    });
+  };
+
+  const submitEditTeam = async (e) => {
+    e.preventDefault();
+    try {
+      await adminAPI.updateTeam(editingTeam._id, { teamName: editingTeam.teamName, teamLeader: { email: editingTeam.leaderEmail } });
+      setEditingTeam(null);
+      fetchTeams();
+      toast({ title: 'Updated', description: 'Team updated', type: 'success' });
+    } catch (error) {
+      console.error('Error updating team:', error);
+      toast({ title: 'Error', description: 'Failed to update team', type: 'destructive' });
     }
   };
 
@@ -324,6 +365,31 @@ function AdminTeams() {
                     <div className="grid md:grid-cols-2 gap-4">
                       {newTeam.members.map((member, index) => (
                         <div key={index}>
+        {/* Edit Team Modal */}
+        {editingTeam && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setEditingTeam(null)} />
+            <Card className="z-10 w-full max-w-lg">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Edit Team</h3>
+                <form onSubmit={submitEditTeam} className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1">Team Name</label>
+                    <input value={editingTeam.teamName} onChange={(e) => setEditingTeam({...editingTeam, teamName: e.target.value})} className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1">Leader Email</label>
+                    <input value={editingTeam.leaderEmail} onChange={(e) => setEditingTeam({...editingTeam, leaderEmail: e.target.value})} className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded" />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => setEditingTeam(null)}>Cancel</Button>
+                    <Button type="submit">Save</Button>
+                  </div>
+                </form>
+              </div>
+            </Card>
+          </div>
+        )}
                           <label className="block text-sm font-medium text-gray-300 mb-2">
                             {index === 0 ? '👑 Team Leader Name' : `Member ${index + 1} Name`}
                             {index === 0 && ' *'}
@@ -441,19 +507,19 @@ function AdminTeams() {
                     className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 p-6 rounded-2xl border border-blue-500/20 backdrop-blur-sm"
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h4 className="text-lg font-bold text-white mb-1">{team.teamName}</h4>
-                        <p className="text-blue-400">Led by {team.teamLeader?.name || 'Unknown'}</p>
+                      <div className="min-w-0">
+                        <h4 className="text-lg font-bold text-white mb-1 truncate">{team.teamName}</h4>
+                        <p className="text-blue-400 truncate">Led by {team.teamLeader?.name || 'Unknown'}</p>
                       </div>
-                      <Badge className="bg-emerald-600/20 text-emerald-400 border-emerald-500/30">
+                      <Badge className="bg-emerald-600/20 text-emerald-400 border-emerald-500/30 text-xs ml-2 flex-shrink-0">
                         {team.status || 'Active'}
                       </Badge>
                     </div>
 
                     <div className="space-y-3 mb-4">
-                      <div>
-                        <span className="text-gray-400 text-sm">Email: </span>
-                        <span className="text-gray-300 text-sm">{team.teamLeader?.email || 'N/A'}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <span className="text-gray-400 text-sm">Email:</span>
+                        <span className="text-gray-300 text-sm break-all sm:ml-2 max-w-xs">{team.teamLeader?.email || 'N/A'}</span>
                       </div>
                       <div>
                         <span className="text-gray-400 text-sm">Members: </span>
@@ -483,9 +549,18 @@ function AdminTeams() {
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => handleEditTeam(team)}
                         className="border-gray-600 text-gray-300 hover:bg-gray-700"
                       >
                         ✏️ Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteTeam(team._id)}
+                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                      >
+                        🗑️ Delete
                       </Button>
                     </div>
                   </motion.div>

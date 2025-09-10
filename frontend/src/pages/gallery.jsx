@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '../hooks/use-toast';
 import { motion } from 'framer-motion';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -137,7 +138,7 @@ function Gallery() {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!uploadFile || !uploadTitle) {
-      alert('Please provide both file and title');
+  addToast({ title: 'Validation', description: 'Please provide both file and title', type: 'destructive' });
       return;
     }
 
@@ -159,10 +160,10 @@ function Gallery() {
       // Refresh gallery
       loadGalleryItems();
       
-      alert('Image uploaded successfully! It will be visible after admin approval.');
+  addToast({ title: 'Success', description: 'Image uploaded successfully! It will be visible after admin approval.', type: 'success' });
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Upload failed: ' + (error.response?.data?.message || error.message));
+  addToast({ title: 'Error', description: 'Upload failed: ' + (error.response?.data?.message || error.message), type: 'destructive' });
     } finally {
       setUploadLoading(false);
     }

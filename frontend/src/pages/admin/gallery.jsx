@@ -7,6 +7,7 @@ import { Badge } from '../../components/ui/badge';
 import { Textarea } from '../../components/ui/textarea';
 import { Dialog } from '../../components/ui/dialog';
 import { galleryAPI } from '../../lib/api';
+import { useToast } from '../../hooks/use-toast';
 
 function AdminGallery() {
   const [photos, setPhotos] = useState([]);
@@ -25,6 +26,7 @@ function AdminGallery() {
   useEffect(() => {
     fetchPhotos();
   }, []);
+  const { addToast } = useToast();
 
   const fetchPhotos = async () => {
     try {
@@ -49,7 +51,7 @@ function AdminGallery() {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (selectedFiles.length === 0) {
-      alert('Please select at least one file');
+      addToast({ title: 'Validation', description: 'Please select at least one file', type: 'destructive' });
       return;
     }
 
@@ -99,10 +101,10 @@ function AdminGallery() {
       setSelectedFiles([]);
       setShowUploadForm(false);
 
-      alert(`Successfully uploaded ${uploadedPhotos.length} photo(s)!`);
+  addToast({ title: 'Success', description: `Successfully uploaded ${uploadedPhotos.length} photo(s)!`, type: 'success' });
     } catch (error) {
       console.error('Error uploading photos:', error);
-      alert('Error uploading photos. Please try again.');
+  addToast({ title: 'Error', description: 'Error uploading photos. Please try again.', type: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -115,10 +117,10 @@ function AdminGallery() {
       await galleryAPI.delete(photoId);
       // Refresh the photos list
       await fetchPhotos();
-      alert('Photo deleted successfully!');
+      addToast({ title: 'Deleted', description: 'Photo deleted successfully!', type: 'success' });
     } catch (error) {
       console.error('Error deleting photo:', error);
-      alert('Error deleting photo: ' + (error.response?.data?.message || error.message));
+      addToast({ title: 'Error', description: 'Error deleting photo: ' + (error.response?.data?.message || error.message), type: 'destructive' });
     }
   };
 
@@ -127,10 +129,10 @@ function AdminGallery() {
       await galleryAPI.approve(photoId);
       // Refresh the photos list to show updated status
       await fetchPhotos();
-      alert('Photo approved successfully!');
+      addToast({ title: 'Success', description: 'Photo approved successfully!', type: 'success' });
     } catch (error) {
       console.error('Error approving photo:', error);
-      alert('Error approving photo: ' + (error.response?.data?.message || error.message));
+      addToast({ title: 'Error', description: 'Error approving photo: ' + (error.response?.data?.message || error.message), type: 'destructive' });
     }
   };
 
@@ -150,12 +152,12 @@ function AdminGallery() {
   const bulkDownload = () => {
     const approvedPhotos = photos.filter(photo => photo.status === 'approved');
     if (approvedPhotos.length === 0) {
-      alert('No approved photos to download');
+      addToast({ title: 'Info', description: 'No approved photos to download', type: 'default' });
       return;
     }
 
     // In a real app, this would create a zip file
-    alert(`Preparing download of ${approvedPhotos.length} photos...`);
+    addToast({ title: 'Info', description: `Preparing download of ${approvedPhotos.length} photos...`, type: 'default' });
     approvedPhotos.forEach(photo => downloadPhoto(photo));
   };
 

@@ -268,6 +268,52 @@ export const resendTeamInvitation = asyncHandler(async (req, res) => {
   res.json({ message: 'Invitation resent successfully' });
 });
 
+// @desc    Update team
+// @route   PUT /api/admin/teams/:id
+// @access  Private/Admin
+export const updateTeam = asyncHandler(async (req, res) => {
+  const team = await Team.findById(req.params.id);
+  if (!team) {
+    res.status(404);
+    throw new Error('Team not found');
+  }
+
+  // Update allowed fields
+  team.teamName = req.body.teamName || team.teamName;
+  if (req.body.teamLeader) {
+    team.teamLeader.name = req.body.teamLeader.name || team.teamLeader.name;
+    team.teamLeader.email = req.body.teamLeader.email || team.teamLeader.email;
+    team.teamLeader.phone = req.body.teamLeader.phone || team.teamLeader.phone;
+  }
+  team.teamMembers = req.body.teamMembers || team.teamMembers;
+  team.teamSize = req.body.teamSize || team.teamSize;
+  team.projectDetails = req.body.projectDetails || team.projectDetails;
+  team.status = req.body.status || team.status;
+
+  const updated = await team.save();
+  res.json({ message: 'Team updated successfully', team: updated });
+});
+
+// @desc    Delete team and linked user
+// @route   DELETE /api/admin/teams/:id
+// @access  Private/Admin
+export const deleteTeam = asyncHandler(async (req, res) => {
+  const team = await Team.findById(req.params.id);
+  if (!team) {
+    res.status(404);
+    throw new Error('Team not found');
+  }
+
+  // Remove associated user account if present
+  const user = await User.findOne({ teamId: team._id });
+  if (user) {
+    await user.deleteOne();
+  }
+
+  await team.deleteOne();
+  res.json({ message: 'Team and associated user removed successfully' });
+});
+
 // ==================== FACULTY MANAGEMENT ====================
 
 // @desc    Get all faculty
@@ -388,6 +434,46 @@ export const resendFacultyInvitation = asyncHandler(async (req, res) => {
   await faculty.save();
 
   res.json({ message: 'Faculty invitation resent successfully' });
+});
+
+// @desc    Update faculty
+// @route   PUT /api/admin/faculty/:id
+// @access  Private/Admin
+export const updateFaculty = asyncHandler(async (req, res) => {
+  const faculty = await Faculty.findById(req.params.id);
+  if (!faculty) {
+    res.status(404);
+    throw new Error('Faculty member not found');
+  }
+
+  faculty.name = req.body.name || faculty.name;
+  faculty.email = req.body.email || faculty.email;
+  faculty.department = req.body.department || faculty.department;
+  faculty.designation = req.body.designation || faculty.designation;
+  faculty.specialization = req.body.specialization || faculty.specialization;
+  faculty.status = req.body.status || faculty.status;
+
+  const updated = await faculty.save();
+  res.json({ message: 'Faculty updated successfully', faculty: updated });
+});
+
+// @desc    Delete faculty (and linked user)
+// @route   DELETE /api/admin/faculty/:id
+// @access  Private/Admin
+export const deleteFaculty = asyncHandler(async (req, res) => {
+  const faculty = await Faculty.findById(req.params.id);
+  if (!faculty) {
+    res.status(404);
+    throw new Error('Faculty member not found');
+  }
+
+  // Remove linked user account
+  if (faculty.userId) {
+    await User.findByIdAndDelete(faculty.userId);
+  }
+
+  await faculty.deleteOne();
+  res.json({ message: 'Faculty and linked user removed successfully' });
 });
 
 // ==================== EVALUATOR MANAGEMENT ====================

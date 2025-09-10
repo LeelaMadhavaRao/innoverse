@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from './components/ui/toaster';
 import ErrorBoundary from './components/error-boundary';
+import { useToast } from './hooks/use-toast';
 
 // Admin Components
 import AdminLayout from './components/admin/admin-layout';
@@ -39,6 +40,8 @@ import PosterLaunch from './pages/poster-launch';
 
 // Auth Context Provider
 import { AuthProvider, useAuth } from './context/auth-context';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole }) => {
@@ -56,12 +59,22 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 };
 
 function App() {
+  const navigate = useNavigate();
+  const { addToast } = useToast();
+
+  useEffect(() => {
+    const handler = (e) => {
+      addToast({ title: 'Session expired', description: 'Your session has expired. Please login again.', type: 'destructive' });
+      navigate('/login');
+    };
+    window.addEventListener('sessionExpired', handler);
+    return () => window.removeEventListener('sessionExpired', handler);
+  }, []);
   return (
     <ErrorBoundary>
-      <Router>
-        <AuthProvider>
-          <ThemeProvider>
-          <Routes>
+      <AuthProvider>
+        <ThemeProvider>
+        <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
@@ -136,11 +149,9 @@ function App() {
               }
             />
           </Routes>
-          
           <Toaster />
           </ThemeProvider>
         </AuthProvider>
-      </Router>
     </ErrorBoundary>
   );
 }

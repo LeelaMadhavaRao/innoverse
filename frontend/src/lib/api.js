@@ -24,6 +24,10 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      // Debug: log token attachment (trimmed)
+      try { console.debug('[api] Attaching token to', config.url, 'token=', token?.slice?.(0,8) + '...'); } catch(e) { }
+    } else {
+      try { console.debug('[api] No token present for', config.url); } catch(e) {}
     }
     return config;
   },
@@ -37,9 +41,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized access
+      // Emit session expired event so UI can handle redirect and toasts
+      try { window.dispatchEvent(new CustomEvent('sessionExpired', { detail: { message: 'Session expired' } })); } catch (e) {}
       localStorage.removeItem('token');
-      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -94,11 +98,15 @@ export const adminAPI = {
   getTeams: () => api.get('/admin/teams'),
   createTeam: (teamData) => api.post('/admin/teams', teamData),
   resendTeamInvitation: (teamId) => api.post(`/admin/teams/${teamId}/resend-invitation`),
+  updateTeam: (teamId, data) => api.put(`/admin/teams/${teamId}`, data),
+  deleteTeam: (teamId) => api.delete(`/admin/teams/${teamId}`),
   
   // Faculty
   getFaculty: () => api.get('/admin/faculty'),
   createFaculty: (facultyData) => api.post('/admin/faculty', facultyData),
   resendFacultyInvitation: (facultyId) => api.post(`/admin/faculty/${facultyId}/resend-invitation`),
+  updateFaculty: (facultyId, data) => api.put(`/admin/faculty/${facultyId}`, data),
+  deleteFaculty: (facultyId) => api.delete(`/admin/faculty/${facultyId}`),
   
   // Evaluators
   getEvaluators: () => api.get('/admin/evaluators'),

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useToast } from '../hooks/use-toast';
 import { Download, Eye, FileText, Printer } from 'lucide-react';
 import '../styles/certificate.css';
 
@@ -10,6 +11,7 @@ const CertificateTemplate = ({
   isPreview = false,
   isBlankTemplate = false
 }) => {
+  const { addToast } = useToast();
   return (
     <div 
       className="certificate-container relative w-full max-w-4xl mx-auto bg-white shadow-2xl"
@@ -444,17 +446,17 @@ const CertificateGenerator = () => {
       }
     } catch (error) {
       console.error('Error generating certificate:', error);
-      alert('Error generating certificate. Please try again.');
+      addToast({ title: 'Error', description: 'Error generating certificate. Please try again.', type: 'destructive' });
     }
   };
 
   const validateForm = () => {
     if (!formData.studentName.trim()) {
-      alert('Please enter student name');
+  addToast({ title: 'Validation', description: 'Please enter student name', type: 'destructive' });
       return false;
     }
     if (!formData.registrationNumber.trim()) {
-      alert('Please enter registration number');
+  addToast({ title: 'Validation', description: 'Please enter registration number', type: 'destructive' });
       return false;
     }
     return true;

@@ -863,9 +863,10 @@ function Home() {
             
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { name: "Mr. P S V Surya Kumar", designation: "Assistant Professor" },
                 { name: "Mr. N Praveen", designation: "Assistant Professor" },
-                { name: "Mr. P Manoj", designation: "Assistant Professor" }
+                { name: "Mr. P Manoj", designation: "Assistant Professor" },
+                { name: "Mr. S Mohan Krishna", designation: "Assistant Professor" },
+                { name: "Mr. P S V Surya Kumar", designation: "Assistant Professor" },
               ].map((faculty, index) => (
                 <motion.div
                   key={index}
