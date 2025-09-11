@@ -1,7 +1,7 @@
 {
   "version": 2,
   "builds": [
-    { "src": "index.html", "use": "@vercel/static-build", "config": { "distDir": "dist", "buildCommand": "npm run build" } }
+    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist", "buildCommand": "npm run build" } }
   ],
   "routes": [
     { "src": "/((?!.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|json|txt|woff|woff2|ttf|eot|map)$).*)", "dest": "/index.html" }
