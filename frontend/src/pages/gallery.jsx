@@ -8,6 +8,11 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { galleryAPI, teamAPI } from '../lib/api';
 import Navigation from '../components/navigation';
+import OptimizedImage, { GalleryImage } from '../components/ui/optimized-image';
+import { useGalleryImage } from '../hooks/use-cloudimage';
+import cloudimageService from '../services/cloudimage';
+import CloudimageStatus from '../components/ui/cloudimage-status';
+import CloudimageTest from '../components/ui/cloudimage-test';
 
 function Gallery() {
   const [items, setItems] = useState([]);
@@ -29,6 +34,12 @@ function Gallery() {
   // Check if user is authenticated (you can get this from auth context or localStorage)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
+
+  // Get toast hook
+  const { addToast } = useToast();
+  
+  // Check if Cloudimage is available
+  const isCloudimageEnabled = cloudimageService.isAvailable();
 
   // Animation variants
   const fadeInUp = {
@@ -138,18 +149,62 @@ function Gallery() {
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!uploadFile || !uploadTitle) {
-  addToast({ title: 'Validation', description: 'Please provide both file and title', type: 'destructive' });
+      addToast({ title: 'Validation', description: 'Please provide both file and title', type: 'destructive' });
       return;
     }
 
     setUploadLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('photos', uploadFile); // Use 'photos' to match backend
-      formData.append('title', uploadTitle);
-      formData.append('description', uploadDescription);
+      // Try to use Cloudimage-enhanced upload if available
+      if (isCloudimageEnabled) {
+        console.log('📸 Uploading with Cloudimage optimization enabled');
+        
+        try {
+          // Use the enhanced gallery API that supports Cloudimage
+          const uploadResult = await galleryAPI.uploadWithCloudimage(uploadFile, {
+            title: uploadTitle,
+            description: uploadDescription,
+            category: 'general',
+            tags: []
+          });
+          
+          console.log('✅ Upload successful with Cloudimage integration:', uploadResult);
+          addToast({ 
+            title: 'Success', 
+            description: 'Image uploaded successfully with Cloudimage optimization! It will be visible after admin approval.', 
+            type: 'success' 
+          });
+        } catch (cloudError) {
+          console.warn('⚠️ Cloudimage upload failed, falling back to regular upload:', cloudError);
+          
+          // Fallback to regular upload
+          const formData = new FormData();
+          formData.append('photos', uploadFile);
+          formData.append('title', uploadTitle);
+          formData.append('description', uploadDescription);
 
-      await teamAPI.uploadToGallery(formData);
+          await teamAPI.uploadToGallery(formData);
+          addToast({ 
+            title: 'Success', 
+            description: 'Image uploaded successfully! It will be visible after admin approval.', 
+            type: 'success' 
+          });
+        }
+      } else {
+        // Regular upload without Cloudimage
+        console.log('📷 Uploading without Cloudimage optimization');
+        const formData = new FormData();
+        formData.append('photos', uploadFile);
+        formData.append('title', uploadTitle);
+        formData.append('description', uploadDescription);
+
+        await teamAPI.uploadToGallery(formData);
+        addToast({ 
+          title: 'Success', 
+          description: 'Image uploaded successfully! It will be visible after admin approval.', 
+          type: 'success' 
+        });
+      }
       
       // Reset form
       setUploadFile(null);
@@ -160,10 +215,13 @@ function Gallery() {
       // Refresh gallery
       loadGalleryItems();
       
-  addToast({ title: 'Success', description: 'Image uploaded successfully! It will be visible after admin approval.', type: 'success' });
     } catch (error) {
-      console.error('Upload failed:', error);
-  addToast({ title: 'Error', description: 'Upload failed: ' + (error.response?.data?.message || error.message), type: 'destructive' });
+      console.error('❌ Upload failed:', error);
+      addToast({ 
+        title: 'Error', 
+        description: 'Upload failed: ' + (error.response?.data?.message || error.message), 
+        type: 'destructive' 
+      });
     } finally {
       setUploadLoading(false);
     }
@@ -396,13 +454,13 @@ function Gallery() {
                   <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-lg border-gray-700/50 overflow-hidden shadow-2xl transition-all duration-300 group-hover:border-purple-500/50 h-full">
                     {/* Project Image */}
                     <div className="relative h-48 sm:h-56 overflow-hidden">
-                      <img 
-                        src={item.url || item.images?.[0] || '/placeholder.jpg'} 
+                      <GalleryImage
+                        src={item.url || item.images?.[0]}
                         alt={item.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        onError={(e) => {
-                          e.target.src = '/placeholder.jpg';
-                        }}
+                        title={item.title}
+                        onClick={() => handleView(item)}
+                        className="w-full h-full"
+                        showHoverEffect={false}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
                       
@@ -584,13 +642,11 @@ function Gallery() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <div className="relative group cursor-pointer" onClick={() => handleFullScreenView(selectedItem.url || selectedItem.images?.[0] || '/placeholder.jpg')}>
-                    <img 
-                      src={selectedItem.url || selectedItem.images?.[0] || '/placeholder.jpg'} 
+                    <OptimizedImage
+                      src={selectedItem.url || selectedItem.images?.[0]}
                       alt={selectedItem.title}
+                      size="modal"
                       className="w-full h-auto rounded-lg transition-transform duration-200 group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = '/placeholder.jpg';
-                      }}
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 rounded-lg flex items-center justify-center">
                       <span className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -656,19 +712,22 @@ function Gallery() {
             </Button>
             
             {/* Full Screen Image */}
-            <motion.img
+            <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.3 }}
-              src={fullScreenImageUrl}
-              alt="Full screen view"
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
               onClick={(e) => e.stopPropagation()}
-              onError={(e) => {
-                e.target.src = '/placeholder.jpg';
-              }}
-            />
+            >
+              <OptimizedImage
+                src={fullScreenImageUrl}
+                alt="Full screen view"
+                size="fullscreen"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                showLoader={true}
+              />
+            </motion.div>
             
             {/* Optional: Image controls/info overlay */}
             <div className="absolute bottom-4 left-4 right-4 bg-black/50 rounded-lg p-3 text-white text-center backdrop-blur-sm">
@@ -677,6 +736,12 @@ function Gallery() {
           </div>
         </div>
       )}
+      
+      {/* Cloudimage Status (Development only) */}
+      <CloudimageStatus />
+      
+      {/* Cloudimage Test Component */}
+      <CloudimageTest />
     </div>
   );
 }

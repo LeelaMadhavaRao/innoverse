@@ -73,6 +73,46 @@ export const galleryAPI = {
   create: (data) => api.post('/gallery', data),
   approve: (id) => api.put(`/gallery/${id}/approve`),
   delete: (id) => api.delete(`/gallery/${id}`),
+  upload: (formData) => api.post('/gallery/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  uploadWithCloudimage: async (file, metadata = {}) => {
+    // First upload to Cloudimage if configured
+    const cloudimageService = await import('../services/cloudimage');
+    
+    if (cloudimageService.default.isAvailable()) {
+      try {
+        const cloudResult = await cloudimageService.default.uploadImage(file, {
+          folder: 'gallery',
+          tags: metadata.tags
+        });
+        
+        // Then save the Cloudimage URL to backend
+        return api.post('/gallery', {
+          title: metadata.title,
+          description: metadata.description,
+          url: cloudResult.public_id || cloudResult.url,
+          cloudimageUrl: cloudResult.url,
+          originalFilename: file.name,
+          mimeType: file.type,
+          size: file.size,
+          ...metadata
+        });
+      } catch (error) {
+        console.warn('Cloudimage upload failed, falling back to regular upload:', error);
+      }
+    }
+    
+    // Fallback to regular upload
+    const formData = new FormData();
+    formData.append('photos', file);
+    formData.append('title', metadata.title || '');
+    formData.append('description', metadata.description || '');
+    
+    return api.post('/gallery/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  }
 };
 
 // Evaluation API calls
