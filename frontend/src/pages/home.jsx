@@ -161,34 +161,6 @@ function Home() {
     setShowFacultyInvitation(false);
   };
 
-  // Faculty invitation effect
-  useEffect(() => {
-    // Check if faculty user just logged in and should see invitation
-    if (user && user.role === 'faculty' && (location.search.includes('showInvitation=true') || localStorage.getItem('showFacultyInvitation'))) {
-      setFacultyData({
-        name: user.name,
-        email: user.email,
-        department: user.department || 'Computer Science',
-        designation: user.designation || 'Assistant Professor',
-        specialization: user.specialization || 'Software Engineering'
-      });
-      setShowFacultyInvitation(true);
-      
-      // Clear the flag
-      localStorage.removeItem('showFacultyInvitation');
-      
-      // Clean up URL
-      if (location.search.includes('showInvitation=true')) {
-        navigate('/', { replace: true });
-      }
-    }
-  }, [user, location.search, navigate]);
-
-  const handleFacultyInvitationComplete = () => {
-    setShowFacultyInvitation(false);
-    setFacultyData(null);
-  };
-
   const scrollToSection = (sectionRef, sectionName) => {
     setActiveSection(sectionName);
     sectionRef.current?.scrollIntoView({ 
