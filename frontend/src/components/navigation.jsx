@@ -81,16 +81,17 @@ function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <motion.div
+            <motion.img
               whileHover={{ scale: 1.05, rotate: 5 }}
               whileTap={{ scale: 0.95 }}
-              className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg"
-            >
-              <span className="text-white font-bold text-lg">I</span>
-            </motion.div>
+              src="/innoverse_logo.jpg"
+              alt="Innoverse Logo"
+              className="w-10 h-10 rounded-xl shadow-lg object-cover"
+              style={{ background: 'white' }}
+            />
             <div className="hidden sm:block">
               <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Innoverse
+                Innoverse 2025
               </h1>
               <p className="text-xs text-gray-400">Innovation Platform</p>
             </div>

@@ -1,7 +1,7 @@
 // Test script for poster launch APIs
 import { fetch } from 'undici';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'https://inno-backend-y1bv.onrender.com';
 
 async function testAPI() {
   try {
