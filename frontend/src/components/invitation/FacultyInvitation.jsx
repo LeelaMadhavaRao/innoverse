@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Canvas } from '@react-three/fiber';
-import { Stars, OrbitControls } from '@react-three/drei';
-import { Rocket3D } from './Rocket3D';
-import { PersonRepairing3D } from './PersonRepairing3D';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 
@@ -132,18 +128,83 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
-      {/* 3D Scene */}
+      {/* Animated Background */}
       <div className="absolute inset-0">
-        <Canvas camera={{ position: [0, 0, 10] }}>
-          <ambientLight intensity={0.2} />
-          <pointLight position={[10, 10, 10]} intensity={1} />
-          <Stars radius={300} depth={50} count={1000} factor={7} saturation={0} fade />
-          
-          {currentStage === 'launch' && <Rocket3D />}
-          {currentStage === 'repair' && <PersonRepairing3D />}
-          
-          <OrbitControls enableZoom={false} enablePan={false} />
-        </Canvas>
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-br from-gray-900 via-purple-900/20 to-blue-900/20"
+          animate={{
+            background: [
+              "radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 50%)",
+              "radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.2) 0%, transparent 50%)",
+              "radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.2) 0%, transparent 50%)"
+            ]
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+        
+        {/* Animated Stars Effect */}
+        <div className="absolute inset-0">
+          {Array.from({ length: 100 }, (_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0]
+              }}
+              transition={{
+                duration: 3,
+                delay: Math.random() * 5,
+                repeat: Infinity,
+                repeatDelay: Math.random() * 3
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 3D Scene Placeholder */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {currentStage === 'launch' && (
+          <motion.div
+            animate={{
+              y: [0, -100, -200],
+              scale: [1, 1.2, 1.5],
+              rotate: [0, 15, -15, 0]
+            }}
+            transition={{
+              duration: 4,
+              ease: "easeOut"
+            }}
+            className="text-9xl"
+          >
+            🚀
+          </motion.div>
+        )}
+        
+        {currentStage === 'repair' && (
+          <motion.div
+            animate={{
+              rotate: [0, 10, -10, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{
+              duration: 0.5,
+              repeat: 8
+            }}
+            className="text-9xl"
+          >
+            🔧
+          </motion.div>
+        )}
       </div>
 
       {/* Explosion Effect */}
@@ -155,8 +216,8 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
             animate="visible"
             className="absolute inset-0 flex items-center justify-center"
           >
-            <div className={`w-96 h-96 rounded-full bg-gradient-radial from-white via-${template.particleColor} to-transparent opacity-50`} />
-            <div className={`absolute w-64 h-64 rounded-full bg-gradient-radial from-${template.particleColor} to-transparent`} />
+            <div className={`w-96 h-96 rounded-full bg-gradient-radial from-white via-yellow-400 to-transparent opacity-50`} />
+            <div className={`absolute w-64 h-64 rounded-full bg-gradient-radial from-orange-400 to-transparent`} />
             <div className="absolute w-32 h-32 rounded-full bg-white" />
           </motion.div>
         )}

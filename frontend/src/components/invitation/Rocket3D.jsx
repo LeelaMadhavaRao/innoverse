@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { motion } from 'framer-motion-3d';
 
 export const Rocket3D = () => {
   const rocketRef = useRef();
