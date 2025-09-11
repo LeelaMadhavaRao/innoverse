@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import FacultyLayout from '../../components/layout/faculty-layout';
+import FacultyLayout from '../../components/faculty/faculty-layout';
+import Navigation from '../../components/navigation';
 import { facultyAPI, teamAPI } from '../../lib/api';
 
 // Animation variants
@@ -40,109 +41,84 @@ const FacultyEvaluation = () => {
     const fetchEvaluationData = async () => {
       setLoading(true);
       try {
-        // Fetch evaluated teams and rankings
+        // Fetch real evaluation results from backend
         let response;
         try {
           response = await facultyAPI.getEvaluationResults();
-        } catch (error) {
-          console.log('Faculty API failed, trying team API');
-          response = await teamAPI.getAllTeams();
-        }
-
-        // Process the data
-        const mockData = [
-          {
-            id: 'team-1',
-            name: 'HealthTech Team',
-            leader: 'Sarah Johnson',
-            members: ['Sarah Johnson', 'Mike Davis', 'Emma Wilson'],
-            idea: 'Remote patient monitoring app with real-time alerts',
-            totalScore: 92,
-            evaluationResults: {
-              problemStatement: 24,
-              teamInvolvement: 23,
-              leanCanvas: 22,
-              prototype: 23
-            },
-            evaluatedBy: 'Dr. Smith',
-            evaluatedAt: new Date('2024-01-20'),
-            rank: 1
-          },
-          {
-            id: 'team-2',
-            name: 'Tech Innovators',
-            leader: 'John Doe',
-            members: ['John Doe', 'Jane Smith', 'Bob Johnson'],
-            idea: 'AI-powered learning platform for personalized education',
-            totalScore: 85,
-            evaluationResults: {
-              problemStatement: 22,
-              teamInvolvement: 20,
-              leanCanvas: 21,
-              prototype: 22
-            },
-            evaluatedBy: 'Dr. Johnson',
-            evaluatedAt: new Date('2024-01-19'),
-            rank: 2
-          },
-          {
-            id: 'team-3',
-            name: 'Green Solutions',
-            leader: 'Alice Wilson',
-            members: ['Alice Wilson', 'Charlie Brown', 'David Lee'],
-            idea: 'Sustainable waste management system using IoT sensors',
-            totalScore: 78,
-            evaluationResults: {
-              problemStatement: 20,
-              teamInvolvement: 19,
-              leanCanvas: 19,
-              prototype: 20
-            },
-            evaluatedBy: 'Dr. Brown',
-            evaluatedAt: new Date('2024-01-18'),
-            rank: 3
-          },
-          {
-            id: 'team-4',
-            name: 'Future Finance',
-            leader: 'Mark Thompson',
-            members: ['Mark Thompson', 'Lisa Wang', 'Ryan Miller'],
-            idea: 'Blockchain-based micro-lending platform',
-            totalScore: 75,
-            evaluationResults: {
-              problemStatement: 19,
-              teamInvolvement: 18,
-              leanCanvas: 19,
-              prototype: 19
-            },
-            evaluatedBy: 'Dr. Wilson',
-            evaluatedAt: new Date('2024-01-17'),
-            rank: 4
-          },
-          {
-            id: 'team-5',
-            name: 'Smart City',
-            leader: 'Elena Rodriguez',
-            members: ['Elena Rodriguez', 'Kevin Park', 'Amy Chen'],
-            idea: 'IoT-based traffic optimization system',
-            totalScore: 72,
-            evaluationResults: {
-              problemStatement: 18,
-              teamInvolvement: 18,
-              leanCanvas: 18,
-              prototype: 18
-            },
-            evaluatedBy: 'Dr. Davis',
-            evaluatedAt: new Date('2024-01-16'),
-            rank: 5
+          console.log('Faculty evaluation results:', response);
+          
+          if (response?.data?.data) {
+            const { teams, resultsReleased, stats } = response.data.data;
+            setEvaluatedTeams(teams || []);
+            setRankings(teams?.sort((a, b) => b.totalScore - a.totalScore) || []);
+            setResultsReleased(resultsReleased);
+            
+            // Store stats for later use
+            window.facultyStats = stats;
+          } else {
+            throw new Error('Invalid response format');
           }
-        ];
-
-        setEvaluatedTeams(mockData);
-        setRankings(mockData.sort((a, b) => b.totalScore - a.totalScore));
-        setResultsReleased(true); // Mock: results are released
+        } catch (error) {
+          console.log('Faculty API failed, trying fallback:', error.message);
+          
+          // Fallback to team API and create mock structure
+          try {
+            const teamsResponse = await teamAPI.getAllTeams();
+            console.log('Teams API response:', teamsResponse);
+            
+            let teamsData = [];
+            if (teamsResponse?.data?.data) {
+              teamsData = teamsResponse.data.data;
+            } else if (Array.isArray(teamsResponse?.data)) {
+              teamsData = teamsResponse.data;
+            } else if (Array.isArray(teamsResponse)) {
+              teamsData = teamsResponse;
+            }
+            
+            // Convert teams data to evaluation format
+            const processedTeams = teamsData.map((team, index) => ({
+              id: team._id || team.id || `team-${index}`,
+              name: team.teamName || team.name || `Team ${index + 1}`,
+              leader: team.teamLeader?.name || team.leader || 'Unknown Leader',
+              members: team.teamMembers || team.members || [],
+              idea: team.projectDetails?.description || team.projectDetails?.title || team.idea || 'No description available',
+              totalScore: 0, // No evaluations yet
+              evaluationResults: {
+                problemStatement: 0,
+                teamInvolvement: 0,
+                leanCanvas: 0,
+                prototype: 0
+              },
+              evaluatedBy: 'Not evaluated',
+              evaluatedAt: null,
+              rank: index + 1,
+              evaluationsCount: 0,
+              isEvaluated: false
+            }));
+            
+            setEvaluatedTeams(processedTeams);
+            setRankings(processedTeams);
+            setResultsReleased(false); // No evaluations yet
+            
+            // Create mock stats
+            window.facultyStats = {
+              totalTeams: processedTeams.length,
+              evaluatedTeams: 0,
+              averageScore: 0,
+              topScore: 0
+            };
+          } catch (fallbackError) {
+            console.error('Fallback also failed:', fallbackError);
+            setEvaluatedTeams([]);
+            setRankings([]);
+            setResultsReleased(false);
+          }
+        }
       } catch (error) {
         console.error('Error fetching evaluation data:', error);
+        setEvaluatedTeams([]);
+        setRankings([]);
+        setResultsReleased(false);
       } finally {
         setLoading(false);
       }
@@ -190,7 +166,10 @@ const FacultyEvaluation = () => {
 
   return (
     <FacultyLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      {/* Navigation */}
+      <Navigation />
+      
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-16">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <motion.div 
@@ -274,155 +253,219 @@ const FacultyEvaluation = () => {
               </div>
             </motion.div>
 
+            {/* Statistics - Moved above team cards */}
+            <motion.div variants={itemVariants} className="mb-8">
+              <h3 className="text-2xl font-bold text-white mb-6 text-center">📈 Evaluation Statistics</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[
+                  { 
+                    title: "Total Teams", 
+                    value: (window.facultyStats?.totalTeams || evaluatedTeams.length), 
+                    icon: "👥", 
+                    color: "from-purple-500 to-pink-600" 
+                  },
+                  { 
+                    title: "Teams Evaluated", 
+                    value: (window.facultyStats?.evaluatedTeams || evaluatedTeams.filter(team => team.isEvaluated).length), 
+                    icon: "✅", 
+                    color: "from-emerald-500 to-teal-600" 
+                  },
+                  { 
+                    title: "Average Score", 
+                    value: (window.facultyStats?.averageScore || (evaluatedTeams.length > 0 ? Math.round(evaluatedTeams.reduce((sum, team) => sum + team.totalScore, 0) / evaluatedTeams.filter(team => team.isEvaluated).length) : 0)) || 0, 
+                    icon: "📊", 
+                    color: "from-blue-500 to-indigo-600" 
+                  },
+                  { 
+                    title: "Highest Score", 
+                    value: (window.facultyStats?.topScore || (evaluatedTeams.length > 0 ? Math.max(...evaluatedTeams.map(team => team.totalScore)) : 0)) || 0, 
+                    icon: "🏆", 
+                    color: "from-yellow-500 to-orange-600" 
+                  }
+                ].map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-3xl border border-emerald-500/20 text-center"
+                  >
+                    <div className={`w-16 h-16 bg-gradient-to-br ${stat.color} rounded-full mx-auto mb-4 flex items-center justify-center text-2xl shadow-2xl`}>
+                      {stat.icon}
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                    <h3 className="text-gray-300 font-medium">{stat.title}</h3>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
             {/* Rankings View */}
             {viewMode === 'rankings' && (
               <motion.div variants={containerVariants} className="grid gap-4 mb-8">
-                {rankings.map((team, index) => (
-                  <motion.div
-                    key={team.id}
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.02 }}
-                    className="group"
-                  >
-                    <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-emerald-500/20 hover:border-emerald-400/50 transition-all duration-300 backdrop-blur-sm">
-                      <div className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-6">
-                            {/* Rank Badge */}
-                            <div className={`w-16 h-16 bg-gradient-to-br ${getRankColor(team.rank)} rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-2xl`}>
-                              {getRankEmoji(team.rank)}
+                {resultsReleased ? (
+                  rankings.filter(team => team.isEvaluated).map((team, index) => (
+                    <motion.div
+                      key={team.id}
+                      variants={itemVariants}
+                      whileHover={{ scale: 1.02 }}
+                      className="group"
+                    >
+                      <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-emerald-500/20 hover:border-emerald-400/50 transition-all duration-300 backdrop-blur-sm">
+                        <div className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                              {/* Rank Badge */}
+                              <div className={`w-16 h-16 bg-gradient-to-br ${getRankColor(team.rank)} rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-2xl`}>
+                                {getRankEmoji(team.rank)}
+                              </div>
+                              
+                              {/* Team Info */}
+                              <div>
+                                <h3 className="text-2xl font-bold text-white mb-1">
+                                  #{team.rank} {team.name}
+                                </h3>
+                                <p className="text-emerald-400 font-medium">👤 {team.leader}</p>
+                                <p className="text-gray-400 text-sm">👥 {Array.isArray(team.members) ? team.members.length : 0} members</p>
+                              </div>
                             </div>
-                            
-                            {/* Team Info */}
-                            <div>
-                              <h3 className="text-2xl font-bold text-white mb-1">
-                                #{team.rank} {team.name}
-                              </h3>
-                              <p className="text-emerald-400 font-medium">👤 {team.leader}</p>
-                              <p className="text-gray-400 text-sm">👥 {team.members.length} members</p>
-                            </div>
-                          </div>
 
-                          {/* Score */}
-                          <div className="text-right">
-                            <div className="text-4xl font-bold text-emerald-400 mb-1">
-                              {team.totalScore}
+                            {/* Score */}
+                            <div className="text-right">
+                              <div className="text-4xl font-bold text-emerald-400 mb-1">
+                                {team.totalScore}
+                              </div>
+                              <p className="text-gray-400 text-sm">/ 100 points</p>
+                              <Button
+                                onClick={() => handleViewDetails(team)}
+                                className="mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                              >
+                                View Details
+                              </Button>
                             </div>
-                            <p className="text-gray-400 text-sm">/ 100 points</p>
-                            <Button
-                              onClick={() => handleViewDetails(team)}
-                              className="mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                            >
-                              View Details
-                            </Button>
                           </div>
                         </div>
-                      </div>
-                    </Card>
+                      </Card>
+                    </motion.div>
+                  ))
+                ) : (
+                  <motion.div
+                    variants={itemVariants}
+                    className="text-center py-16"
+                  >
+                    <div className="text-8xl mb-6">🔒</div>
+                    <h3 className="text-3xl font-bold text-gray-400 mb-4">Results Not Disclosed</h3>
+                    <p className="text-gray-500 text-lg mb-8">
+                      Evaluation results are not yet available. The evaluators haven't released the results.
+                    </p>
+                    <div className="bg-gradient-to-r from-orange-900/50 to-red-900/50 border border-orange-500/30 rounded-2xl p-6 max-w-2xl mx-auto">
+                      <p className="text-orange-400 font-medium">
+                        📊 {(window.facultyStats?.totalTeams || evaluatedTeams.length)} teams registered • 
+                        ⏳ {(window.facultyStats?.evaluatedTeams || 0)} evaluations completed • 
+                        🔒 Results pending release
+                      </p>
+                    </div>
                   </motion.div>
-                ))}
+                )}
               </motion.div>
             )}
 
             {/* Detailed View */}
             {viewMode === 'detailed' && (
-              <motion.div variants={containerVariants} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {evaluatedTeams.map((team) => (
-                  <motion.div
-                    key={team.id}
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.02, y: -5 }}
-                    className="group"
-                  >
-                    <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-emerald-500/20 hover:border-emerald-400/50 transition-all duration-300 backdrop-blur-sm">
-                      <div className="p-6">
-                        {/* Header */}
-                        <div className="flex items-start justify-between mb-6">
-                          <div>
-                            <h3 className="text-xl font-bold text-white mb-1 flex items-center">
-                              <span className={`w-6 h-6 bg-gradient-to-br ${getRankColor(team.rank)} rounded-full mr-3 flex items-center justify-center text-sm font-bold`}>
-                                {team.rank}
-                              </span>
-                              {team.name}
-                            </h3>
-                            <p className="text-emerald-400 font-medium">👤 {team.leader}</p>
-                          </div>
-                          <Badge className="bg-emerald-600/20 text-emerald-400 border-emerald-500/30">
-                            {team.totalScore}/100
-                          </Badge>
-                        </div>
-
-                        {/* Evaluation Breakdown */}
-                        <div className="space-y-3 mb-6">
-                          {[
-                            { label: 'Problem Statement', score: team.evaluationResults.problemStatement, max: 25, color: 'bg-blue-500' },
-                            { label: 'Team Involvement', score: team.evaluationResults.teamInvolvement, max: 25, color: 'bg-green-500' },
-                            { label: 'Lean Canvas', score: team.evaluationResults.leanCanvas, max: 25, color: 'bg-purple-500' },
-                            { label: 'Prototype', score: team.evaluationResults.prototype, max: 25, color: 'bg-orange-500' }
-                          ].map((item, index) => (
-                            <div key={index}>
-                              <div className="flex justify-between text-sm mb-1">
-                                <span className="text-gray-300">{item.label}</span>
-                                <span className="text-white font-semibold">{item.score}/{item.max}</span>
+              <motion.div variants={containerVariants} className="mb-8">
+                {resultsReleased ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {evaluatedTeams.filter(team => team.isEvaluated).map((team) => (
+                      <motion.div
+                        key={team.id}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        className="group"
+                      >
+                        <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-emerald-500/20 hover:border-emerald-400/50 transition-all duration-300 backdrop-blur-sm">
+                          <div className="p-6">
+                            {/* Header */}
+                            <div className="flex items-start justify-between mb-6">
+                              <div>
+                                <h3 className="text-xl font-bold text-white mb-1 flex items-center">
+                                  <span className={`w-6 h-6 bg-gradient-to-br ${getRankColor(team.rank)} rounded-full mr-3 flex items-center justify-center text-sm font-bold`}>
+                                    {team.rank}
+                                  </span>
+                                  {team.name}
+                                </h3>
+                                <p className="text-emerald-400 font-medium">👤 {team.leader}</p>
                               </div>
-                              <div className="w-full bg-gray-700 rounded-full h-2">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  whileInView={{ width: `${(item.score / item.max) * 100}%` }}
-                                  transition={{ duration: 1, delay: index * 0.1 }}
-                                  className={`h-2 rounded-full ${item.color}`}
-                                />
+                              <Badge className="bg-emerald-600/20 text-emerald-400 border-emerald-500/30">
+                                {team.totalScore}/100
+                              </Badge>
+                            </div>
+
+                            {/* Evaluation Breakdown */}
+                            <div className="space-y-3 mb-6">
+                              {[
+                                { label: 'Problem Statement', score: team.evaluationResults.problemStatement, max: 25, color: 'bg-blue-500' },
+                                { label: 'Team Involvement', score: team.evaluationResults.teamInvolvement, max: 25, color: 'bg-green-500' },
+                                { label: 'Lean Canvas', score: team.evaluationResults.leanCanvas, max: 25, color: 'bg-purple-500' },
+                                { label: 'Prototype', score: team.evaluationResults.prototype, max: 25, color: 'bg-orange-500' }
+                              ].map((item, index) => (
+                                <div key={index}>
+                                  <div className="flex justify-between text-sm mb-1">
+                                    <span className="text-gray-300">{item.label}</span>
+                                    <span className="text-white font-semibold">{item.score}/{item.max}</span>
+                                  </div>
+                                  <div className="w-full bg-gray-700 rounded-full h-2">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      whileInView={{ width: `${(item.score / item.max) * 100}%` }}
+                                      transition={{ duration: 1, delay: index * 0.1 }}
+                                      className={`h-2 rounded-full ${item.color}`}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Evaluation Info */}
+                            <div className="pt-4 border-t border-gray-700/50">
+                              <div className="flex justify-between text-sm text-gray-400">
+                                <span>Evaluated by: {team.evaluatedBy}</span>
+                                <span>{team.evaluatedAt ? new Date(team.evaluatedAt).toLocaleDateString() : 'N/A'}</span>
                               </div>
                             </div>
-                          ))}
-                        </div>
 
-                        {/* Evaluation Info */}
-                        <div className="pt-4 border-t border-gray-700/50">
-                          <div className="flex justify-between text-sm text-gray-400">
-                            <span>Evaluated by: {team.evaluatedBy}</span>
-                            <span>{new Date(team.evaluatedAt).toLocaleDateString()}</span>
+                            {/* Action Button */}
+                            <Button
+                              onClick={() => handleViewDetails(team)}
+                              className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                            >
+                              View Full Details
+                            </Button>
                           </div>
-                        </div>
-
-                        {/* Action Button */}
-                        <Button
-                          onClick={() => handleViewDetails(team)}
-                          className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                        >
-                          View Full Details
-                        </Button>
-                      </div>
-                    </Card>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <motion.div
+                    variants={itemVariants}
+                    className="text-center py-16"
+                  >
+                    <div className="text-8xl mb-6">📊</div>
+                    <h3 className="text-3xl font-bold text-gray-400 mb-4">Detailed Results Not Available</h3>
+                    <p className="text-gray-500 text-lg mb-8">
+                      Detailed evaluation breakdowns will be shown here once the evaluators release the results.
+                    </p>
+                    <div className="bg-gradient-to-r from-blue-900/50 to-indigo-900/50 border border-blue-500/30 rounded-2xl p-6 max-w-2xl mx-auto">
+                      <p className="text-blue-400 font-medium">
+                        📋 Detailed scores, evaluation breakdowns, and individual feedback will be available after results are released.
+                      </p>
+                    </div>
                   </motion.div>
-                ))}
+                )}
               </motion.div>
             )}
 
-            {/* Statistics */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[
-                { title: "Teams Evaluated", value: evaluatedTeams.length, icon: "✅", color: "from-emerald-500 to-teal-600" },
-                { title: "Average Score", value: Math.round(evaluatedTeams.reduce((sum, team) => sum + team.totalScore, 0) / evaluatedTeams.length) || 0, icon: "📊", color: "from-blue-500 to-indigo-600" },
-                { title: "Highest Score", value: Math.max(...evaluatedTeams.map(team => team.totalScore)) || 0, icon: "🏆", color: "from-yellow-500 to-orange-600" },
-                { title: "Results Status", value: resultsReleased ? "Released" : "Pending", icon: resultsReleased ? "🔓" : "🔒", color: resultsReleased ? "from-green-500 to-emerald-600" : "from-orange-500 to-red-600" }
-              ].map((stat, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-6 rounded-3xl border border-emerald-500/20 text-center"
-                >
-                  <div className={`w-16 h-16 bg-gradient-to-br ${stat.color} rounded-full mx-auto mb-4 flex items-center justify-center text-2xl shadow-2xl`}>
-                    {stat.icon}
-                  </div>
-                  <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
-                  <h3 className="text-gray-300 font-medium">{stat.title}</h3>
-                </motion.div>
-              ))}
-            </motion.div>
           </motion.div>
         </div>
 

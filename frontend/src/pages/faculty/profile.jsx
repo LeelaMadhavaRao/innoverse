@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import FacultyLayout from '../../components/layout/faculty-layout';
+import FacultyLayout from '../../components/faculty/faculty-layout';
+import Navigation from '../../components/navigation';
 import FacultyInvitation from '../../components/invitation/FacultyInvitation';
 import { useAuth } from '../../context/auth-context';
 
@@ -11,8 +12,15 @@ function FacultyProfile() {
   const { user } = useAuth();
   const [showInvitation, setShowInvitation] = useState(false);
 
+  // Debug faculty data
+  console.log('🔍 Faculty Profile Debug - User data:', user);
+  console.log('📊 Faculty designation:', user?.designation);
+  console.log('🏢 Faculty department:', user?.department);
+  console.log('🔬 Faculty specialization:', user?.specialization);
+
   const getDesignationInfo = () => {
     const designation = user?.designation?.toLowerCase() || '';
+    console.log('🎯 Processing designation:', designation);
     
     if (designation.includes('principal') || designation.includes('dean')) {
       return { 
@@ -76,7 +84,10 @@ function FacultyProfile() {
 
   return (
     <FacultyLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      {/* Navigation */}
+      <Navigation />
+      
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-16">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <motion.div 

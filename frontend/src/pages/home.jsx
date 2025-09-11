@@ -138,12 +138,14 @@ function Home() {
     const facultyInvitationFlag = localStorage.getItem('showFacultyInvitation');
     
     if (user && user.role === 'faculty' && (showInvitation === 'true' || facultyInvitationFlag === 'true')) {
+      console.log('🎯 Faculty Invitation - Using actual user data for faculty invitation');
+      
       setFacultyData({
         name: user.name || 'Faculty Member',
         email: user.email || 'faculty@example.com',
-        department: user.department || 'Computer Science',
-        designation: user.designation || 'Assistant Professor',
-        specialization: user.specialization || 'Software Engineering'
+        department: user.department || 'Not specified',
+        designation: user.designation || 'Not specified',
+        specialization: user.specialization || 'Not specified'
       });
       setShowFacultyInvitation(true);
       

@@ -4,10 +4,8 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
-import FacultyLayout from '../../components/faculty/faculty-layout';
-import Navigation from '../../components/navigation';
+import FacultyLayout from '../../components/layout/faculty-layout';
 import { facultyAPI, teamAPI } from '../../lib/api';
-import APITester from '../../components/debug/APITester';
 
 // Animation variants
 const containerVariants = {
@@ -44,71 +42,20 @@ const FacultyTeams = () => {
       setLoading(true);
       try {
         let response;
-        let teamsData = [];
-        
-        // Skip health check for now and try direct API calls
-        console.log('🔄 Skipping health check, attempting direct team data fetch...');
-
         try {
           // Try faculty API first
-          console.log('🔄 Attempting faculty API call...');
           response = await facultyAPI.getAllTeams();
-          console.log('✅ Faculty API response:', response);
         } catch (error) {
-          console.log('❌ Faculty API failed, trying team API:', error.message);
+          console.log('Faculty API failed, trying team API:', error.message);
           // Fallback to team API
-          try {
-            console.log('🔄 Attempting team API call...');
-            response = await teamAPI.getAllTeams();
-            console.log('✅ Team API response:', response);
-          } catch (teamError) {
-            console.log('❌ Team API also failed:', teamError.message);
-            
-            // Try direct fetch as last resort
-            try {
-              console.log('🔄 Attempting direct fetch...');
-              const directUrl = `${import.meta.env.VITE_API_URL || 'https://inno-backend-y1bv.onrender.com/api'}/teams`;
-              console.log('🔗 Direct URL:', directUrl);
-              
-              const directResponse = await fetch(directUrl, {
-                method: 'GET',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                cache: 'no-cache',
-                mode: 'cors'
-              });
-              
-              console.log('📡 Direct response status:', directResponse.status);
-              console.log('📡 Direct response headers:', [...directResponse.headers.entries()]);
-              
-              if (!directResponse.ok) {
-                const errorText = await directResponse.text();
-                console.error('📡 Direct response error:', errorText);
-                throw new Error(`HTTP ${directResponse.status}: ${directResponse.statusText}`);
-              }
-              
-              const directData = await directResponse.json();
-              response = { data: directData };
-              console.log('✅ Direct fetch successful:', response);
-            } catch (directError) {
-              console.error('❌ Direct fetch also failed:', directError);
-              console.error('❌ Direct error details:', {
-                name: directError.name,
-                message: directError.message,
-                stack: directError.stack?.slice(0, 500)
-              });
-              throw directError;
-            }
-          }
+          response = await teamAPI.getAllTeams();
         }
 
+        console.log('Teams response:', response);
+        
         // Handle different response structures
+        let teamsData = [];
         if (response?.success && Array.isArray(response.data)) {
-          teamsData = response.data;
-        } else if (Array.isArray(response?.data?.data)) {
-          teamsData = response.data.data;
-        } else if (Array.isArray(response?.data)) {
           teamsData = response.data;
         } else if (Array.isArray(response?.teams)) {
           teamsData = response.teams;
@@ -116,42 +63,72 @@ const FacultyTeams = () => {
           teamsData = response;
         }
 
-        console.log('Processing teams data:', teamsData);
-
         // Transform teams data to include evaluation status
         const processedTeams = teamsData.map((team, index) => ({
           id: team._id || team.id || `team-${index}`,
           name: team.teamName || team.name || `Team ${index + 1}`,
-          leader: team.teamLeader?.name || team.leader || team.teamLeader || 'Unknown',
-          email: team.teamLeader?.email || team.email || team.leaderEmail || '',
-          members: team.teamMembers || team.members || [],
-          idea: team.projectDetails?.description || team.problemStatement || team.idea || team.projectIdea || 'No problem statement provided',
-          evaluated: team.evaluationScores && team.evaluationScores.length > 0,
-          score: team.evaluationScores && team.evaluationScores.length > 0 
-            ? Math.round(team.evaluationScores.reduce((sum, evaluation) => sum + evaluation.totalScore, 0) / team.evaluationScores.length) 
-            : 0,
+          leader: team.leader || team.teamLeader || 'Unknown',
+          email: team.email || team.leaderEmail || '',
+          members: team.members || team.teamMembers || [],
+          idea: team.problemStatement || team.idea || team.projectIdea || 'No problem statement provided',
+          evaluated: team.evaluated || false,
+          score: team.score || team.totalScore || 0,
           submittedAt: team.createdAt || team.submittedAt || new Date(),
-          evaluationResults: team.evaluationScores || []
+          evaluationResults: team.evaluationResults || []
         }));
 
-        console.log('Processed teams:', processedTeams);
         setTeams(processedTeams);
       } catch (error) {
         console.error('Error fetching teams:', error);
-        console.error('Error details:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack?.slice(0, 500)
-        });
-        
-        // Instead of showing empty teams, try to provide some fallback
-        console.log('🔄 Teams fetch failed, providing empty array with helpful message');
-        
-        // Set a message for the user to know what happened
-        setTeams([]);
-        
-        // You could also set an error state here to show a retry button
-        // setError(error.message);
+        // Set fallback data
+        setTeams([
+          {
+            id: 'team-1',
+            name: 'Tech Innovators',
+            leader: 'John Doe',
+            email: 'john@example.com',
+            members: ['John Doe', 'Jane Smith', 'Bob Johnson'],
+            idea: 'AI-powered learning platform for personalized education',
+            evaluated: true,
+            score: 85,
+            submittedAt: new Date('2024-01-15'),
+            evaluationResults: [{
+              problemStatement: 22,
+              teamInvolvement: 20,
+              leanCanvas: 21,
+              prototype: 22
+            }]
+          },
+          {
+            id: 'team-2',
+            name: 'Green Solutions',
+            leader: 'Alice Wilson',
+            email: 'alice@example.com',
+            members: ['Alice Wilson', 'Charlie Brown', 'David Lee'],
+            idea: 'Sustainable waste management system using IoT sensors',
+            evaluated: false,
+            score: 0,
+            submittedAt: new Date('2024-01-16'),
+            evaluationResults: []
+          },
+          {
+            id: 'team-3',
+            name: 'HealthTech Team',
+            leader: 'Sarah Johnson',
+            email: 'sarah@example.com',
+            members: ['Sarah Johnson', 'Mike Davis', 'Emma Wilson'],
+            idea: 'Remote patient monitoring app with real-time alerts',
+            evaluated: true,
+            score: 92,
+            submittedAt: new Date('2024-01-17'),
+            evaluationResults: [{
+              problemStatement: 24,
+              teamInvolvement: 23,
+              leanCanvas: 22,
+              prototype: 23
+            }]
+          }
+        ]);
       } finally {
         setLoading(false);
       }
@@ -160,13 +137,17 @@ const FacultyTeams = () => {
     fetchTeams();
   }, []);
 
-  // Filter teams based on search only (remove evaluation status filter for faculty)
+  // Filter teams based on search and status
   const filteredTeams = teams.filter(team => {
     const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          team.leader.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          team.idea.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch;
+    const matchesStatus = filterStatus === 'all' ||
+                         (filterStatus === 'evaluated' && team.evaluated) ||
+                         (filterStatus === 'pending' && !team.evaluated);
+
+    return matchesSearch && matchesStatus;
   });
 
   const handleViewTeam = (team) => {
@@ -190,10 +171,7 @@ const FacultyTeams = () => {
 
   return (
     <FacultyLayout>
-      {/* Navigation */}
-      <Navigation />
-      
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <motion.div 
@@ -251,21 +229,14 @@ const FacultyTeams = () => {
               ))}
             </motion.div>
 
-            {/* Debug: API Tester (remove in production) */}
-            {process.env.NODE_ENV === 'development' && (
-              <motion.div variants={itemVariants} className="mb-8">
-                <APITester />
-              </motion.div>
-            )}
-
-            {/* Filters - Simplified for Faculty */}
+            {/* Filters */}
             <motion.div variants={itemVariants} className="mb-8">
               <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-emerald-500/20 backdrop-blur-sm">
                 <div className="p-6">
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1">
                       <Input
-                        placeholder="🔍 Search teams, leaders, or projects..."
+                        placeholder="🔍 Search teams, leaders, or ideas..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="bg-gray-700/50 border-emerald-500/30 text-white placeholder-gray-400 focus:border-emerald-400"
@@ -273,10 +244,34 @@ const FacultyTeams = () => {
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        onClick={() => window.location.href = '/faculty/evaluation'}
-                        className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+                        variant={filterStatus === 'all' ? 'default' : 'outline'}
+                        onClick={() => setFilterStatus('all')}
+                        className={filterStatus === 'all' 
+                          ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white" 
+                          : "border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/10"
+                        }
                       >
-                        📊 View Results
+                        All Teams
+                      </Button>
+                      <Button
+                        variant={filterStatus === 'evaluated' ? 'default' : 'outline'}
+                        onClick={() => setFilterStatus('evaluated')}
+                        className={filterStatus === 'evaluated' 
+                          ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white" 
+                          : "border-emerald-500/50 text-emerald-400 hover:bg-emerald-600/10"
+                        }
+                      >
+                        Evaluated
+                      </Button>
+                      <Button
+                        variant={filterStatus === 'pending' ? 'default' : 'outline'}
+                        onClick={() => setFilterStatus('pending')}
+                        className={filterStatus === 'pending' 
+                          ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white" 
+                          : "border-orange-500/50 text-orange-400 hover:bg-orange-600/10"
+                        }
+                      >
+                        Pending
                       </Button>
                     </div>
                   </div>
@@ -308,26 +303,34 @@ const FacultyTeams = () => {
                           <p className="text-emerald-400 font-medium">👤 {team.leader}</p>
                         </div>
                         <div className="text-right">
-                          <Badge className="bg-blue-600/20 text-blue-400 border-blue-500/30">
-                            📋 Registered
+                          <Badge 
+                            className={
+                              team.evaluated 
+                                ? "bg-emerald-600/20 text-emerald-400 border-emerald-500/30"
+                                : "bg-orange-600/20 text-orange-400 border-orange-500/30"
+                            }
+                          >
+                            {team.evaluated ? '✅ Evaluated' : '⏳ Pending'}
                           </Badge>
+                          {team.evaluated && (
+                            <div className="text-2xl font-bold text-emerald-400 mt-1">
+                              {team.score}/100
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Team Info - Simplified for Faculty View */}
+                      {/* Team Info */}
                       <div className="mb-4">
                         <p className="text-gray-300 text-sm mb-2">
                           <strong className="text-white">👥 Members:</strong> {Array.isArray(team.members) ? team.members.length : team.members?.split(',').length || 0}
                         </p>
-                        <p className="text-gray-300 text-sm line-clamp-2 mb-2">
-                          <strong className="text-white">💡 Project:</strong> {team.idea}
-                        </p>
-                        <p className="text-gray-300 text-sm">
-                          <strong className="text-white">📅 Registered:</strong> {team.submittedAt ? new Date(team.submittedAt).toLocaleDateString() : 'N/A'}
+                        <p className="text-gray-300 text-sm line-clamp-2">
+                          <strong className="text-white">💡 Idea:</strong> {team.idea}
                         </p>
                       </div>
 
-                      {/* Actions - Faculty can only view details, not evaluate */}
+                      {/* Actions */}
                       <div className="flex gap-3 pt-4 border-t border-gray-700/50">
                         <Button
                           onClick={() => handleViewTeam(team)}
@@ -335,12 +338,14 @@ const FacultyTeams = () => {
                         >
                           👁️ View Details
                         </Button>
-                        <Button
-                          onClick={() => window.location.href = '/faculty/evaluation'}
-                          className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
-                        >
-                          📊 View Results
-                        </Button>
+                        {!team.evaluated && (
+                          <Button
+                            onClick={() => window.location.href = `/faculty/evaluate/${team.id}`}
+                            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+                          >
+                            ⭐ Evaluate
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </Card>
@@ -357,8 +362,8 @@ const FacultyTeams = () => {
                 <div className="text-6xl mb-4">👥</div>
                 <h3 className="text-2xl font-semibold text-white mb-2">No Teams Found</h3>
                 <p className="text-gray-400">
-                  {searchTerm 
-                    ? 'No teams found matching your search criteria'
+                  {searchTerm || filterStatus !== 'all' 
+                    ? 'Try adjusting your search or filter criteria'
                     : 'Teams will appear here once they register for Innoverse 2025'}
                 </p>
               </motion.div>

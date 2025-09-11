@@ -2,12 +2,19 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://inno-backend-y1bv.onrender.com/api';
 
+console.log('🔍 API Configuration:', {
+  baseURL: API_BASE_URL,
+  environment: import.meta.env.MODE,
+  viteApiUrl: import.meta.env.VITE_API_URL
+});
+
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout
 });
 
 // Create public axios instance (no auth required)
@@ -16,6 +23,7 @@ const publicApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout
 });
 
 // Request interceptor to add auth token
@@ -29,21 +37,62 @@ api.interceptors.request.use(
     } else {
       try { console.debug('[api] No token present for', config.url); } catch(e) {}
     }
+    
+    // Log all API requests
+    console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    
     return config;
   },
   (error) => {
+    console.error('🚨 API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add request interceptor for public API too
+publicApi.interceptors.request.use(
+  (config) => {
+    console.log(`🌍 Public API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error('🚨 Public API Request Error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor to handle common errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    return response;
+  },
   (error) => {
+    console.error(`❌ API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status || 'Network Error'}`);
     if (error.response?.status === 401) {
       // Emit session expired event so UI can handle redirect and toasts
       try { window.dispatchEvent(new CustomEvent('sessionExpired', { detail: { message: 'Session expired' } })); } catch (e) {}
       localStorage.removeItem('token');
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for public API too
+publicApi.interceptors.response.use(
+  (response) => {
+    console.log(`✅ Public API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    return response;
+  },
+  (error) => {
+    console.error(`❌ Public API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url} - ${error.response?.status || 'Network Error'}`);
+    if (error.response) {
+      console.error('   Response data:', error.response.data);
+      console.error('   Response headers:', error.response.headers);
+    } else if (error.request) {
+      console.error('   No response received:', error.request);
+    } else {
+      console.error('   Request setup error:', error.message);
     }
     return Promise.reject(error);
   }
@@ -65,7 +114,7 @@ export const teamAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   getResults: () => api.get('/team/results'),
-  getAllTeams: () => api.get('/teams'),
+  getAllTeams: () => publicApi.get('/teams'),
 };
 
 // Gallery API calls
@@ -185,7 +234,7 @@ export const adminAPI = {
 export const facultyAPI = {
   getDashboard: () => api.get('/faculty/dashboard'),
   getTeams: () => api.get('/faculty/teams'),
-  getAllTeams: () => api.get('/teams'),
+  getAllTeams: () => publicApi.get('/teams'),
   getEvaluations: () => api.get('/faculty/evaluations'),
   getEvaluationResults: () => api.get('/faculty/evaluation-results'),
   getReports: () => api.get('/faculty/reports'),

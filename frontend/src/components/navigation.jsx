@@ -74,8 +74,9 @@ function Navigation() {
         { path: '/evaluator/evaluations', label: 'Evaluations', icon: '📝' },
       ],
       faculty: [
-        { path: '/faculty', label: 'Dashboard', icon: '📚' },
+        { path: '/faculty/profile', label: 'Profile', icon: '�' },
         { path: '/faculty/teams', label: 'Teams', icon: '🎓' },
+        { path: '/faculty/evaluation', label: 'Evaluation', icon: '📊' },
       ]
     };
 

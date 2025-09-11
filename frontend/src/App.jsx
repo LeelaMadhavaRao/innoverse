@@ -5,6 +5,8 @@ import ErrorBoundary from './components/error-boundary';
 import { useToast } from './hooks/use-toast';
 
 // Admin Components
+
+// Admin Components
 import AdminLayout from './components/admin/admin-layout';
 import AdminDashboard from './pages/admin/index';
 import AdminUsers from './pages/admin/users';
@@ -28,8 +30,7 @@ import EvaluatorTeams from './pages/evaluator/teams';
 import EvaluatorEvaluations from './pages/evaluator/evaluations';
 
 // Faculty Components
-import FacultyLayout from './components/layout/faculty-layout';
-import FacultyDashboard from './pages/faculty';
+import FacultyLayout from './components/faculty/faculty-layout';
 import FacultyProfile from './pages/faculty/profile';
 import FacultyTeams from './pages/faculty/teams';
 import FacultyEvaluation from './pages/faculty/evaluation';
@@ -136,11 +137,7 @@ function App() {
             {/* Faculty Routes */}
             <Route
               path="/faculty"
-              element={
-                <ProtectedRoute requiredRole="faculty">
-                  <FacultyDashboard />
-                </ProtectedRoute>
-              }
+              element={<Navigate to="/faculty/profile" replace />}
             />
             <Route
               path="/faculty/profile"

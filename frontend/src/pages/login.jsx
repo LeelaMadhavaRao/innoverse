@@ -71,12 +71,29 @@ function Login() {
     setError('');
     setIsLoading(true);
 
+    // Validate role selection
+    if (!selectedRole) {
+      setError('Please select your login role first');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const result = await login(formData);
+      // Include the selected role in the login data
+      const loginData = {
+        ...formData,
+        role: selectedRole.type  // Extract just the type string, not the whole object
+      };
+      
+      const result = await login(loginData);
       if (result.success) {
-        // Redirect all users to home page after successful login
-        // They can navigate to their dashboards from there
-        navigate('/');
+        // For faculty users, redirect to home with invitation flag
+        if (result.user?.role === 'faculty') {
+          navigate('/?showInvitation=true');
+        } else {
+          // Other users go directly to home
+          navigate('/');
+        }
       } else {
         setError(result.error);
       }
@@ -224,6 +241,9 @@ function Login() {
               <Badge className={`${selectedRole.borderColor} text-gray-300 bg-black/20`}>
                 Innoverse 2025
               </Badge>
+              <p className="text-xs text-gray-400 mt-2">
+                💡 The same email can be used for different roles
+              </p>
             </div>
 
             {/* Error Message */}

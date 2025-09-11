@@ -124,11 +124,11 @@ export const createTeam = asyncHandler(async (req, res) => {
     throw new Error('Team with this name or leader email already exists');
   }
 
-  // Check if team leader email already exists
-  const existingUser = await User.findOne({ email: teamLeader.email });
+  // Check if team leader already has a team account
+  const existingUser = await User.findOne({ email: teamLeader.email, role: 'team' });
   if (existingUser) {
     res.status(400);
-    throw new Error('Team leader email already registered');
+    throw new Error('Team leader already has a team account with this email');
   }
 
   // Generate unique username and password
@@ -196,7 +196,7 @@ export const createTeam = asyncHandler(async (req, res) => {
       credentials: {
         username,
         password,
-        loginUrl: `${process.env.FRONTEND_URL}/login`
+  loginUrl: `${process.env.FRONTEND_URL || 'https://innoverse-csit.web.app'}/login`
       },
       adminMessage: `Team created by admin. Access your team dashboard with the credentials below.`
     });
@@ -332,76 +332,132 @@ export const getFaculty = asyncHandler(async (req, res) => {
 // @route   POST /api/admin/faculty
 // @access  Private/Admin
 export const createFaculty = asyncHandler(async (req, res) => {
+  console.log('🆕 === FACULTY CREATION DEBUG ===');
+  console.log('📧 Request body:', JSON.stringify(req.body, null, 2));
+  console.log('👤 Admin user:', req.user ? req.user._id : 'Not authenticated');
+  
   const { name, email, department, designation, specialization, experience } = req.body;
 
-  // Check if faculty email already exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
+  // Validate required fields
+  if (!name || !email || !department || !designation || !specialization) {
+    console.log('❌ Missing required fields:', {
+      name: !!name,
+      email: !!email,
+      department: !!department,
+      designation: !!designation,
+      specialization: !!specialization
+    });
     res.status(400);
-    throw new Error('Faculty email already registered');
+    throw new Error('Please provide all required fields: name, email, department, designation, and specialization');
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    console.log('❌ Invalid email format:', email);
+    res.status(400);
+    throw new Error('Please provide a valid email address');
+  }
+
+  // Validate designation value
+  const validDesignations = ['Assistant Professor', 'Associate Professor', 'Professor', 'HOD', 'Principal'];
+  if (designation && !validDesignations.includes(designation)) {
+    console.log('❌ Invalid designation value received:', designation);
+    res.status(400);
+    throw new Error(`Invalid designation. Must be one of: ${validDesignations.join(', ')}`);
+  }
+
+  // Check if faculty with this email already exists (same email can exist for different roles)
+  console.log('🔍 Checking for existing faculty with email:', email);
+  const existingUser = await User.findOne({ email, role: 'faculty' });
+  if (existingUser) {
+    console.log('❌ Faculty already exists:', existingUser.name);
+    res.status(400);
+    throw new Error('Faculty account with this email already exists');
   }
 
   // Generate password
   const password = crypto.randomBytes(8).toString('hex');
+  console.log('🔑 Generated password for faculty');
 
-  // Create user account
-  const user = await User.create({
-    name,
-    email,
-    password,
-    role: 'faculty',
-    createdBy: req.user._id
-  });
-
-  // Create faculty profile
-  const faculty = await Faculty.create({
-    name,
-    email,
-    userId: user._id,
-    department,
-    designation,
-    specialization,
-    experience,
-    status: 'active'
-  });
-
-  // Link faculty profile to user
-  user.facultyProfile = faculty._id;
-  await user.save();
-
-  // Send invitation email
   try {
-    await getEmailService().sendFacultyInvitation({
-      facultyData: {
-        name,
-        email,
-        department,
-        designation,
-        specialization
-      },
-      credentials: {
-        password
+    // Create user account
+    console.log('👤 Creating user account...');
+    const user = await User.create({
+      name,
+      email,
+      password,
+      role: 'faculty',
+      createdBy: req.user?._id || null
+    });
+    console.log('✅ User created:', user._id);
+
+    // Create faculty profile
+    console.log('🎓 Creating faculty profile...');
+    const faculty = await Faculty.create({
+      name,
+      email,
+      userId: user._id,
+      department,
+      designation,
+      specialization,
+      experience: experience || '',
+      status: 'active'
+    });
+    console.log('✅ Faculty profile created:', faculty._id);
+
+    // Link faculty profile to user
+    console.log('🔗 Linking faculty profile to user...');
+    user.facultyProfile = faculty._id;
+    await user.save();
+    console.log('✅ Faculty profile linked to user');
+
+    // Send invitation email
+    try {
+      console.log('📧 Sending faculty invitation email...');
+      await getEmailService().sendFacultyInvitation({
+        facultyData: {
+          name,
+          email,
+          department,
+          designation,
+          specialization
+        },
+        credentials: {
+          password
+        }
+      });
+
+      // Mark invitation as sent
+      faculty.invitationSent = true;
+      faculty.invitationSentAt = new Date();
+      await faculty.save();
+      console.log('✅ Faculty invitation email sent successfully');
+    } catch (emailError) {
+      console.error('❌ Failed to send faculty invitation:', emailError);
+      // Don't throw error for email failure - faculty creation was successful
+    }
+
+    console.log('🎉 Faculty creation completed successfully');
+    res.status(201).json({
+      message: 'Faculty member created successfully and invitation sent',
+      faculty,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
       }
     });
 
-    // Mark invitation as sent
-    faculty.invitationSent = true;
-    faculty.invitationSentAt = new Date();
-    await faculty.save();
-  } catch (emailError) {
-    console.error('Failed to send faculty invitation:', emailError);
+  } catch (error) {
+    console.error('❌ Faculty creation failed:', error.message);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500);
+    throw new Error(`Failed to create faculty account: ${error.message}`);
   }
-
-  res.status(201).json({
-    message: 'Faculty member created successfully and invitation sent',
-    faculty,
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }
-  });
+  
+  console.log('🆕 === END FACULTY CREATION DEBUG ===\n');
 });
 
 // @desc    Resend faculty invitation
@@ -496,11 +552,11 @@ export const getEvaluators = asyncHandler(async (req, res) => {
 export const createEvaluator = asyncHandler(async (req, res) => {
   const { name, email, organization, designation, expertise, experience, type } = req.body;
 
-  // Check if evaluator email already exists
-  const existingUser = await User.findOne({ email });
+  // Check if evaluator with this email already exists (same email can exist for different roles)
+  const existingUser = await User.findOne({ email, role: 'evaluator' });
   if (existingUser) {
     res.status(400);
-    throw new Error('Evaluator email already registered');
+    throw new Error('Evaluator account with this email already exists');
   }
 
   // Generate password

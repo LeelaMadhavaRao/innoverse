@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import FacultyLayout from '../../components/layout/faculty-layout';
+import FacultyLayout from '../../components/faculty/faculty-layout';
 import { useAuth } from '../../context/auth-context';
 import { facultyAPI, adminAPI } from '../../lib/api';
 

@@ -24,12 +24,20 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      console.log('🔄 Attempting login with:', { email: credentials.email });
+      console.log('🔄 Attempting login with:', { 
+        email: credentials.email, 
+        role: credentials.role,
+        roleType: typeof credentials.role 
+      });
       const response = await authAPI.login(credentials);
       console.log('📡 API response:', response);
       
       const { token, user } = response.data;
       console.log('✅ Login successful:', { user: user.name, role: user.role });
+      console.log('🎯 Complete user data from backend:', JSON.stringify(user, null, 2));
+      console.log('📋 User designation:', user.designation);
+      console.log('🏢 User department:', user.department);
+      console.log('🔬 User specialization:', user.specialization);
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
