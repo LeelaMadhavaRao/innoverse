@@ -316,7 +316,7 @@ function Home() {
         >
           <motion.div variants={fadeInUp} className="mb-8">
             <Badge className="bg-emerald-600/20 text-emerald-400 border-emerald-500/30 mb-6 px-4 py-2 text-lg">
-              September 15-16, 2025
+              September 17, 2025
             </Badge>
           </motion.div>
 
@@ -767,7 +767,7 @@ function Home() {
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-emerald-400">Day 1 - Innoverse</h3>
-                  <p className="text-gray-400">September 15, 2025</p>
+                  <p className="text-gray-400">September 17, 2025</p>
                 </div>
               </div>
               
@@ -818,7 +818,7 @@ function Home() {
                 </div>
                 <div>
                   <h3 className="text-3xl font-bold text-orange-400">Day 2 - Potluck Lunch</h3>
-                  <p className="text-gray-400">September 16, 2025</p>
+                  <p className="text-gray-400">September 17, 2025</p>
                 </div>
               </div>
               
@@ -1262,7 +1262,7 @@ function Home() {
               <div className="space-y-2 text-gray-400">
                 <div className="flex items-center">
                   <span className="mr-2">📅</span>
-                  <span>September 15-16, 2025</span>
+                  <span>September 17, 2025</span>
                 </div>
                 <div className="flex items-center">
                   <span className="mr-2">📍</span>

@@ -40,30 +40,42 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
         title: '🏛️ Distinguished Principal',
         greeting: 'Your Excellence',
         message: 'We are deeply honored to have your esteemed presence at Innoverse 2025',
-        bgGradient: 'from-yellow-600 via-orange-500 to-red-600',
-        particleColor: '#FFA500',
+        bgGradient: 'from-amber-50 via-yellow-50 to-white',
+        frameGradient: 'from-amber-400 via-yellow-500 to-amber-600',
+        shadowColor: 'shadow-amber-500/30',
+        particleColor: '#F59E0B',
         crown: '👑',
-        specialTitle: 'Chief Guest & Distinguished Leader'
+        specialTitle: 'Chief Guest & Distinguished Leader',
+        textColor: 'text-gray-800',
+        accentColor: 'text-amber-700'
       };
     } else if (isHOD) {
       return {
         title: '🎯 Respected Head of Department',
         greeting: 'Dear HOD',
         message: 'Your leadership and vision are invaluable to Innoverse 2025',
-        bgGradient: 'from-purple-600 via-blue-500 to-indigo-600',
-        particleColor: '#8B5CF6',
+        bgGradient: 'from-slate-50 via-blue-50 to-white',
+        frameGradient: 'from-slate-300 via-blue-400 to-slate-500',
+        shadowColor: 'shadow-blue-500/30',
+        particleColor: '#3B82F6',
         crown: '⭐',
-        specialTitle: 'Department Leader & Innovation Champion'
+        specialTitle: 'Department Leader & Innovation Champion',
+        textColor: 'text-gray-800',
+        accentColor: 'text-blue-700'
       };
     } else {
       return {
         title: '🎓 Esteemed Faculty Member',
         greeting: 'Dear Professor',
         message: 'Your expertise and guidance inspire innovation at Innoverse 2025',
-        bgGradient: 'from-emerald-600 via-teal-500 to-cyan-600',
+        bgGradient: 'from-emerald-50 via-teal-50 to-white',
+        frameGradient: 'from-emerald-300 via-teal-400 to-emerald-500',
+        shadowColor: 'shadow-emerald-500/30',
         particleColor: '#10B981',
         crown: '🌟',
-        specialTitle: 'Innovation Mentor & Guide'
+        specialTitle: 'Innovation Mentor & Guide',
+        textColor: 'text-gray-800',
+        accentColor: 'text-emerald-700'
       };
     }
   };
@@ -127,16 +139,16 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
   ));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
+    <div className="fixed inset-0 z-50 bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900">
       {/* Animated Background */}
       <div className="absolute inset-0">
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-gray-900 via-purple-900/20 to-blue-900/20"
+          className="absolute inset-0 bg-gradient-to-br from-gray-900 via-amber-900/10 to-slate-900"
           animate={{
             background: [
-              "radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 50%)",
-              "radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.2) 0%, transparent 50%)",
-              "radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.2) 0%, transparent 50%)"
+              "radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.1) 0%, transparent 50%)",
+              "radial-gradient(circle at 80% 20%, rgba(250, 204, 21, 0.1) 0%, transparent 50%)",
+              "radial-gradient(circle at 40% 40%, rgba(251, 191, 36, 0.1) 0%, transparent 50%)"
             ]
           }}
           transition={{
@@ -151,7 +163,7 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
           {Array.from({ length: 100 }, (_, i) => (
             <motion.div
               key={i}
-              className="absolute w-1 h-1 bg-white rounded-full"
+              className="absolute w-1 h-1 bg-amber-200 rounded-full"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`
@@ -216,9 +228,9 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
             animate="visible"
             className="absolute inset-0 flex items-center justify-center"
           >
-            <div className={`w-96 h-96 rounded-full bg-gradient-radial from-white via-yellow-400 to-transparent opacity-50`} />
-            <div className={`absolute w-64 h-64 rounded-full bg-gradient-radial from-orange-400 to-transparent`} />
-            <div className="absolute w-32 h-32 rounded-full bg-white" />
+            <div className={`w-96 h-96 rounded-full bg-gradient-radial from-amber-200 via-yellow-300 to-transparent opacity-50`} />
+            <div className={`absolute w-64 h-64 rounded-full bg-gradient-radial from-yellow-400 to-transparent`} />
+            <div className="absolute w-32 h-32 rounded-full bg-amber-100" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -235,111 +247,134 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
             animate="visible"
             className="absolute inset-0 flex items-center justify-center p-4"
           >
-            <Card className={`max-w-2xl w-full bg-gradient-to-br ${template.bgGradient} border-2 border-white/20 backdrop-blur-lg shadow-2xl`}>
-              <motion.div 
-                className="p-12 text-center relative overflow-hidden"
-                animate={{
-                  background: [
-                    'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 70%)',
-                    'radial-gradient(circle at 30% 40%, rgba(255,255,255,0.1) 0%, transparent 70%)',
-                    'radial-gradient(circle at 70% 60%, rgba(255,255,255,0.1) 0%, transparent 70%)'
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                {/* Decorative Elements */}
-                <div className="absolute top-4 left-4 text-4xl">{template.crown}</div>
-                <div className="absolute top-4 right-4 text-4xl">{template.crown}</div>
-                <div className="absolute bottom-4 left-4 text-4xl">🚀</div>
-                <div className="absolute bottom-4 right-4 text-4xl">✨</div>
-
-                {/* Header */}
-                <motion.div
-                  initial={{ y: -50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                  className="mb-8"
+            {/* Ornate Frame Border */}
+            <div className={`max-w-2xl w-full relative ${template.shadowColor} shadow-2xl`}>
+              {/* Outer decorative frame */}
+              <div className={`absolute -inset-4 bg-gradient-to-r ${template.frameGradient} rounded-3xl`}>
+                <div className="absolute -inset-1 bg-gradient-to-r from-white via-amber-100 to-white rounded-3xl blur-sm opacity-50"></div>
+              </div>
+              
+              {/* Middle frame with pattern */}
+              <div className="absolute -inset-2 bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-300 rounded-2xl">
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent rounded-2xl"></div>
+                {/* Decorative corner elements */}
+                <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-amber-600 rounded-tl-lg"></div>
+                <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-amber-600 rounded-tr-lg"></div>
+                <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-amber-600 rounded-bl-lg"></div>
+                <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-amber-600 rounded-br-lg"></div>
+              </div>
+              
+              {/* Inner content card */}
+              <Card className={`relative bg-gradient-to-br ${template.bgGradient} border-2 border-amber-300/50 backdrop-blur-lg rounded-xl overflow-hidden`}>
+                <motion.div 
+                  className="p-12 text-center relative overflow-hidden"
+                  animate={{
+                    background: [
+                      'radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.05) 0%, transparent 70%)',
+                      'radial-gradient(circle at 30% 40%, rgba(245, 158, 11, 0.05) 0%, transparent 70%)',
+                      'radial-gradient(circle at 70% 60%, rgba(250, 204, 21, 0.05) 0%, transparent 70%)'
+                    ]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
                 >
-                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-                    INNOVERSE 2025
-                  </h1>
-                  <div className="w-32 h-1 bg-white mx-auto rounded-full"></div>
-                </motion.div>
+                  {/* Decorative Elements */}
+                  <div className={`absolute top-4 left-4 text-4xl ${template.accentColor}`}>{template.crown}</div>
+                  <div className={`absolute top-4 right-4 text-4xl ${template.accentColor}`}>{template.crown}</div>
+                  <div className="absolute bottom-4 left-4 text-4xl text-amber-600">🚀</div>
+                  <div className="absolute bottom-4 right-4 text-4xl text-yellow-500">✨</div>
 
-                {/* Invitation Content */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 1, type: "spring", stiffness: 100 }}
-                  className="mb-8"
-                >
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                    {template.title}
-                  </h2>
-                  <div className="text-lg text-white/90 mb-6">
-                    <p className="mb-2">{template.greeting} <strong>{facultyData.name}</strong>,</p>
-                    <p className="mb-4">{template.message}</p>
-                    <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm border border-white/20">
-                      <p className="font-semibold text-xl text-white mb-2">{template.specialTitle}</p>
-                      <div className="text-sm text-white/80">
-                        <p><strong>Department:</strong> {facultyData.department}</p>
-                        <p><strong>Designation:</strong> {facultyData.designation}</p>
-                        {facultyData.specialization && (
-                          <p><strong>Specialization:</strong> {facultyData.specialization}</p>
-                        )}
+                  {/* Header */}
+                  <motion.div
+                    initial={{ y: -50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.8 }}
+                    className="mb-8"
+                  >
+                    <h1 className={`text-4xl md:text-5xl font-bold ${template.textColor} mb-2`}>
+                      INNOVERSE 2025
+                    </h1>
+                    <div className={`w-32 h-1 bg-gradient-to-r ${template.frameGradient} mx-auto rounded-full`}></div>
+                  </motion.div>
+
+                  {/* Invitation Content */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 1, type: "spring", stiffness: 100 }}
+                    className="mb-8"
+                  >
+                    <h2 className={`text-2xl md:text-3xl font-bold ${template.accentColor} mb-4`}>
+                      {template.title}
+                    </h2>
+                    <div className={`text-lg ${template.textColor} mb-6`}>
+                      <p className="mb-2">{template.greeting} <strong className={template.accentColor}>{facultyData.name}</strong>,</p>
+                      <p className="mb-4">{template.message}</p>
+                      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-amber-200/50 shadow-inner">
+                        <p className={`font-semibold text-xl ${template.accentColor} mb-2`}>{template.specialTitle}</p>
+                        <div className={`text-sm ${template.textColor}`}>
+                          <p><strong>Department:</strong> {facultyData.department}</p>
+                          <p><strong>Designation:</strong> {facultyData.designation}</p>
+                          {facultyData.specialization && (
+                            <p><strong>Specialization:</strong> {facultyData.specialization}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
 
-                {/* Event Details */}
-                <motion.div
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 1.5, duration: 0.8 }}
-                  className="bg-black/30 rounded-lg p-6 backdrop-blur-sm border border-white/10 mb-8"
-                >
-                  <h3 className="text-xl font-bold text-white mb-4">🎯 Event Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white/90">
-                    <div>
-                      <strong>📅 Date:</strong> March 15-16, 2025
-                    </div>
-                    <div>
-                      <strong>🕐 Time:</strong> 9:00 AM - 6:00 PM
-                    </div>
-                    <div>
-                      <strong>📍 Venue:</strong> SRKR Engineering College
-                    </div>
-                    <div>
-                      <strong>🎯 Focus:</strong> Startup Innovation Showcase
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Action Button */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 2, type: "spring", stiffness: 150 }}
-                >
-                  <Button
-                    onClick={onComplete}
-                    className="bg-white text-gray-900 hover:bg-white/90 px-8 py-4 text-lg font-bold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300"
+                  {/* Event Details */}
+                  <motion.div
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 1.5, duration: 0.8 }}
+                    className="bg-white/40 backdrop-blur-sm rounded-lg p-6 border border-amber-200/30 mb-8 shadow-inner"
                   >
-                    ✨ Enter Faculty Portal ✨
-                  </Button>
-                </motion.div>
+                    <h3 className={`text-xl font-bold ${template.accentColor} mb-4`}>🎯 Event Details</h3>
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${template.textColor}`}>
+                      <div>
+                        <strong>📅 Date:</strong> September 17, 2025
+                      </div>
+                      <div>
+                        <strong>🕐 Time:</strong> 9:00 AM - 6:00 PM
+                      </div>
+                      <div>
+                        <strong>📍 Venue:</strong> SRKR Engineering College
+                      </div>
+                      <div>
+                        <strong>🎯 Focus:</strong> Startup Innovation Showcase
+                      </div>
+                    </div>
+                  </motion.div>
 
-                {/* Animated Border */}
-                <div className="absolute inset-0 rounded-lg">
-                  <div className="absolute inset-0 rounded-lg border-2 border-white/30 animate-pulse"></div>
-                </div>
-              </motion.div>
-            </Card>
+                  {/* Action Button */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 2, type: "spring", stiffness: 150 }}
+                  >
+                    <Button
+                      onClick={onComplete}
+                      className={`bg-gradient-to-r ${template.frameGradient} hover:from-amber-500 hover:via-yellow-600 hover:to-amber-700 text-white hover:text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-amber-300/50`}
+                    >
+                      ✨ Enter Faculty Portal ✨
+                    </Button>
+                  </motion.div>
+
+                  {/* Animated Border Pattern */}
+                  <div className="absolute inset-0 rounded-xl pointer-events-none">
+                    <div className="absolute inset-0 rounded-xl border-2 border-amber-300/30 animate-pulse"></div>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent animate-pulse"></div>
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent animate-pulse"></div>
+                    <div className="absolute left-0 top-0 w-1 h-full bg-gradient-to-b from-transparent via-amber-400 to-transparent animate-pulse"></div>
+                    <div className="absolute right-0 top-0 w-1 h-full bg-gradient-to-b from-transparent via-amber-400 to-transparent animate-pulse"></div>
+                  </div>
+                </motion.div>
+              </Card>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -355,12 +390,12 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
             {currentStage === 'launch' ? (
               <>
                 🚀 Launching Innovation Journey...
-                <div className="text-sm mt-2 text-white/70">Preparing your exclusive invitation</div>
+                <div className="text-sm mt-2 text-amber-200/70">Preparing your exclusive invitation</div>
               </>
             ) : (
               <>
                 🔧 Crafting Perfect Experience...
-                <div className="text-sm mt-2 text-white/70">Personalizing your welcome</div>
+                <div className="text-sm mt-2 text-amber-200/70">Personalizing your welcome</div>
               </>
             )}
           </motion.div>
