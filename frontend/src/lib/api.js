@@ -65,6 +65,7 @@ export const teamAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   getResults: () => api.get('/team/results'),
+  getAllTeams: () => api.get('/teams'),
 };
 
 // Gallery API calls
@@ -184,7 +185,9 @@ export const adminAPI = {
 export const facultyAPI = {
   getDashboard: () => api.get('/faculty/dashboard'),
   getTeams: () => api.get('/faculty/teams'),
+  getAllTeams: () => api.get('/teams'),
   getEvaluations: () => api.get('/faculty/evaluations'),
+  getEvaluationResults: () => api.get('/faculty/evaluation-results'),
   getReports: () => api.get('/faculty/reports'),
 };
 

@@ -29,53 +29,86 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
 
   const getInvitationTemplate = () => {
     const { designation } = facultyData;
-    const isHOD = designation?.toLowerCase().includes('hod') || 
-                  designation?.toLowerCase().includes('head') ||
-                  designation?.toLowerCase().includes('director');
-    const isPrincipal = designation?.toLowerCase().includes('principal') ||
-                       designation?.toLowerCase().includes('dean');
-
-    if (isPrincipal) {
+    
+    // Debug log with essential info only
+    console.log('🎯 Faculty Invitation - Designation:', designation);
+    
+    // Check for exact match first, then fallback to contains check
+    if (designation === 'Principal' || designation?.toLowerCase().includes('principal') || designation?.toLowerCase().includes('dean')) {
       return {
-        title: '🏛️ Distinguished Principal',
+        title: '👑 Distinguished Principal',
         greeting: 'Your Excellence',
-        message: 'We are deeply honored to have your esteemed presence at Innoverse 2025',
-        bgGradient: 'from-amber-50 via-yellow-50 to-white',
-        frameGradient: 'from-amber-400 via-yellow-500 to-amber-600',
-        shadowColor: 'shadow-amber-500/30',
+        message: 'We are deeply honored to have your esteemed leadership and guidance at Innoverse 2025. Your visionary approach to education inspires innovation.',
+        bgGradient: 'from-amber-50 via-yellow-50 to-orange-50',
+        frameGradient: 'from-amber-400 via-yellow-500 to-orange-600',
+        shadowColor: 'shadow-amber-500/40',
         particleColor: '#F59E0B',
         crown: '👑',
-        specialTitle: 'Chief Guest & Distinguished Leader',
-        textColor: 'text-gray-800',
-        accentColor: 'text-amber-700'
+        specialTitle: 'Chief Guest & Visionary Leader',
+        textColor: 'text-gray-900',
+        accentColor: 'text-amber-800',
+        borderGlow: 'shadow-[0_0_30px_rgba(245,158,11,0.6)]'
       };
-    } else if (isHOD) {
+    } else if (designation === 'HOD' || designation?.toLowerCase().includes('hod') || designation?.toLowerCase().includes('head')) {
       return {
-        title: '🎯 Respected Head of Department',
+        title: '� Respected Head of Department',
         greeting: 'Dear HOD',
-        message: 'Your leadership and vision are invaluable to Innoverse 2025',
-        bgGradient: 'from-slate-50 via-blue-50 to-white',
-        frameGradient: 'from-slate-300 via-blue-400 to-slate-500',
-        shadowColor: 'shadow-blue-500/30',
+        message: 'Your exceptional leadership and departmental vision make you an invaluable asset to Innoverse 2025. We look forward to your guidance.',
+        bgGradient: 'from-blue-50 via-indigo-50 to-purple-50',
+        frameGradient: 'from-blue-400 via-indigo-500 to-purple-600',
+        shadowColor: 'shadow-blue-500/40',
         particleColor: '#3B82F6',
         crown: '⭐',
         specialTitle: 'Department Leader & Innovation Champion',
-        textColor: 'text-gray-800',
-        accentColor: 'text-blue-700'
+        textColor: 'text-gray-900',
+        accentColor: 'text-blue-800',
+        borderGlow: 'shadow-[0_0_30px_rgba(59,130,246,0.6)]'
       };
-    } else {
+    } else if (designation === 'Professor' || designation?.toLowerCase().includes('professor')) {
       return {
-        title: '🎓 Esteemed Faculty Member',
+        title: '🎓 Esteemed Professor',
         greeting: 'Dear Professor',
-        message: 'Your expertise and guidance inspire innovation at Innoverse 2025',
-        bgGradient: 'from-emerald-50 via-teal-50 to-white',
-        frameGradient: 'from-emerald-300 via-teal-400 to-emerald-500',
-        shadowColor: 'shadow-emerald-500/30',
+        message: 'Your academic excellence and research expertise bring immense value to Innoverse 2025. We are honored by your participation.',
+        bgGradient: 'from-emerald-50 via-teal-50 to-cyan-50',
+        frameGradient: 'from-emerald-400 via-teal-500 to-cyan-600',
+        shadowColor: 'shadow-emerald-500/40',
         particleColor: '#10B981',
         crown: '🌟',
-        specialTitle: 'Innovation Mentor & Guide',
-        textColor: 'text-gray-800',
-        accentColor: 'text-emerald-700'
+        specialTitle: 'Academic Excellence & Research Guide',
+        textColor: 'text-gray-900',
+        accentColor: 'text-emerald-800',
+        borderGlow: 'shadow-[0_0_30px_rgba(16,185,129,0.6)]'
+      };
+    } else if (designation === 'Associate Professor') {
+      return {
+        title: '📚 Distinguished Associate Professor',
+        greeting: 'Dear Associate Professor',
+        message: 'Your scholarly achievements and mentoring capabilities are essential to the success of Innoverse 2025.',
+        bgGradient: 'from-violet-50 via-purple-50 to-fuchsia-50',
+        frameGradient: 'from-violet-400 via-purple-500 to-fuchsia-600',
+        shadowColor: 'shadow-purple-500/40',
+        particleColor: '#8B5CF6',
+        crown: '🔮',
+        specialTitle: 'Research Mentor & Academic Scholar',
+        textColor: 'text-gray-900',
+        accentColor: 'text-purple-800',
+        borderGlow: 'shadow-[0_0_30px_rgba(139,92,246,0.6)]'
+      };
+    } else {
+      // Default for Assistant Professor and others
+      return {
+        title: '🌱 Dedicated Assistant Professor',
+        greeting: 'Dear Assistant Professor',
+        message: 'Your fresh perspective and innovative teaching approach inspire the next generation. Welcome to Innoverse 2025!',
+        bgGradient: 'from-green-50 via-lime-50 to-yellow-50',
+        frameGradient: 'from-green-400 via-lime-500 to-yellow-600',
+        shadowColor: 'shadow-green-500/40',
+        particleColor: '#22C55E',
+        crown: '�',
+        specialTitle: 'Innovation Mentor & Future Builder',
+        textColor: 'text-gray-900',
+        accentColor: 'text-green-800',
+        borderGlow: 'shadow-[0_0_30px_rgba(34,197,94,0.6)]'
       };
     }
   };
@@ -140,6 +173,29 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900">
+      {/* Skip Button */}
+      <motion.button
+        onClick={() => {
+          console.log('Skip button clicked!');
+          if (onComplete) {
+            onComplete();
+          } else {
+            console.error('onComplete function not provided');
+          }
+        }}
+        className="fixed top-6 right-6 z-[60] bg-gray-800/90 hover:bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600/50 hover:border-gray-500 transition-all duration-300 backdrop-blur-sm flex items-center gap-2 shadow-lg hover:shadow-xl cursor-pointer"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <span className="text-sm font-medium">Skip</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m9 18 6-6-6-6"/>
+        </svg>
+      </motion.button>
+
       {/* Animated Background */}
       <div className="absolute inset-0">
         <motion.div 
@@ -245,29 +301,29 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
             variants={invitationVariants}
             initial="hidden"
             animate="visible"
-            className="absolute inset-0 flex items-center justify-center p-4"
+            className="absolute inset-0 flex items-center justify-center p-4 overflow-y-auto"
           >
-            {/* Ornate Frame Border */}
-            <div className={`max-w-2xl w-full relative ${template.shadowColor} shadow-2xl`}>
+            {/* Ornate Frame Border with Enhanced Glow */}
+            <div className={`max-w-4xl w-full max-h-[95vh] relative ${template.shadowColor} ${template.borderGlow} mx-auto`}>
               {/* Outer decorative frame */}
-              <div className={`absolute -inset-4 bg-gradient-to-r ${template.frameGradient} rounded-3xl`}>
-                <div className="absolute -inset-1 bg-gradient-to-r from-white via-amber-100 to-white rounded-3xl blur-sm opacity-50"></div>
+              <div className={`absolute -inset-4 bg-gradient-to-r ${template.frameGradient} rounded-3xl animate-pulse`}>
+                <div className="absolute -inset-1 bg-gradient-to-r from-white via-yellow-100 to-white rounded-3xl blur-sm opacity-60"></div>
               </div>
               
               {/* Middle frame with pattern */}
               <div className="absolute -inset-2 bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-300 rounded-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 to-transparent rounded-2xl"></div>
                 {/* Decorative corner elements */}
-                <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-amber-600 rounded-tl-lg"></div>
-                <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-amber-600 rounded-tr-lg"></div>
-                <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-amber-600 rounded-bl-lg"></div>
-                <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-amber-600 rounded-br-lg"></div>
+                <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-amber-600 rounded-tl-lg"></div>
+                <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-amber-600 rounded-tr-lg"></div>
+                <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-amber-600 rounded-bl-lg"></div>
+                <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-amber-600 rounded-br-lg"></div>
               </div>
               
               {/* Inner content card */}
               <Card className={`relative bg-gradient-to-br ${template.bgGradient} border-2 border-amber-300/50 backdrop-blur-lg rounded-xl overflow-hidden`}>
                 <motion.div 
-                  className="p-12 text-center relative overflow-hidden"
+                  className="p-6 md:p-8 lg:p-10 text-center relative overflow-hidden max-h-[90vh] overflow-y-auto"
                   animate={{
                     background: [
                       'radial-gradient(circle at 50% 50%, rgba(251, 191, 36, 0.05) 0%, transparent 70%)',
@@ -282,22 +338,22 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
                   }}
                 >
                   {/* Decorative Elements */}
-                  <div className={`absolute top-4 left-4 text-4xl ${template.accentColor}`}>{template.crown}</div>
-                  <div className={`absolute top-4 right-4 text-4xl ${template.accentColor}`}>{template.crown}</div>
-                  <div className="absolute bottom-4 left-4 text-4xl text-amber-600">🚀</div>
-                  <div className="absolute bottom-4 right-4 text-4xl text-yellow-500">✨</div>
+                  <div className={`absolute top-2 left-2 text-2xl md:text-3xl ${template.accentColor}`}>{template.crown}</div>
+                  <div className={`absolute top-2 right-2 text-2xl md:text-3xl ${template.accentColor}`}>{template.crown}</div>
+                  <div className="absolute bottom-2 left-2 text-2xl md:text-3xl text-amber-600">🚀</div>
+                  <div className="absolute bottom-2 right-2 text-2xl md:text-3xl text-yellow-500">✨</div>
 
                   {/* Header */}
                   <motion.div
                     initial={{ y: -50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.5, duration: 0.8 }}
-                    className="mb-8"
+                    className="mb-6"
                   >
-                    <h1 className={`text-4xl md:text-5xl font-bold ${template.textColor} mb-2`}>
+                    <h1 className={`text-2xl md:text-3xl lg:text-4xl font-bold ${template.textColor} mb-2`}>
                       INNOVERSE 2025
                     </h1>
-                    <div className={`w-32 h-1 bg-gradient-to-r ${template.frameGradient} mx-auto rounded-full`}></div>
+                    <div className={`w-24 md:w-32 h-1 bg-gradient-to-r ${template.frameGradient} mx-auto rounded-full`}></div>
                   </motion.div>
 
                   {/* Invitation Content */}
@@ -305,17 +361,17 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 1, type: "spring", stiffness: 100 }}
-                    className="mb-8"
+                    className="mb-6"
                   >
-                    <h2 className={`text-2xl md:text-3xl font-bold ${template.accentColor} mb-4`}>
+                    <h2 className={`text-lg md:text-xl lg:text-2xl font-bold ${template.accentColor} mb-3`}>
                       {template.title}
                     </h2>
-                    <div className={`text-lg ${template.textColor} mb-6`}>
-                      <p className="mb-2">{template.greeting} <strong className={template.accentColor}>{facultyData.name}</strong>,</p>
-                      <p className="mb-4">{template.message}</p>
-                      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-amber-200/50 shadow-inner">
-                        <p className={`font-semibold text-xl ${template.accentColor} mb-2`}>{template.specialTitle}</p>
-                        <div className={`text-sm ${template.textColor}`}>
+                    <div className={`text-sm md:text-base ${template.textColor} mb-4`}>
+                      <p className="mb-2">{template.greeting} <strong className={template.accentColor}>{facultyData.name} Sir</strong>,</p>
+                      <p className="mb-3 text-xs md:text-sm">{template.message}</p>
+                      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-amber-200/50 shadow-inner">
+                        <p className={`font-semibold text-sm md:text-base ${template.accentColor} mb-2`}>{template.specialTitle}</p>
+                        <div className={`text-xs md:text-sm ${template.textColor}`}>
                           <p><strong>Department:</strong> {facultyData.department}</p>
                           <p><strong>Designation:</strong> {facultyData.designation}</p>
                           {facultyData.specialization && (
@@ -331,10 +387,10 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 1.5, duration: 0.8 }}
-                    className="bg-white/40 backdrop-blur-sm rounded-lg p-6 border border-amber-200/30 mb-8 shadow-inner"
+                    className="bg-white/40 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-amber-200/30 mb-6 shadow-inner"
                   >
-                    <h3 className={`text-xl font-bold ${template.accentColor} mb-4`}>🎯 Event Details</h3>
-                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${template.textColor}`}>
+                    <h3 className={`text-sm md:text-base font-bold ${template.accentColor} mb-3`}>🎯 Event Details</h3>
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 text-xs md:text-sm ${template.textColor}`}>
                       <div>
                         <strong>📅 Date:</strong> September 17, 2025
                       </div>
@@ -358,7 +414,7 @@ const FacultyInvitation = ({ facultyData, onComplete }) => {
                   >
                     <Button
                       onClick={onComplete}
-                      className={`bg-gradient-to-r ${template.frameGradient} hover:from-amber-500 hover:via-yellow-600 hover:to-amber-700 text-white hover:text-white px-8 py-4 text-lg font-bold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-amber-300/50`}
+                      className={`bg-gradient-to-r ${template.frameGradient} hover:from-amber-500 hover:via-yellow-600 hover:to-amber-700 text-white hover:text-white px-4 md:px-6 py-2 md:py-3 text-sm md:text-base font-bold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-amber-300/50`}
                     >
                       ✨ Enter Faculty Portal ✨
                     </Button>

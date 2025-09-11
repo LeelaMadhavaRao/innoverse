@@ -28,9 +28,11 @@ import EvaluatorTeams from './pages/evaluator/teams';
 import EvaluatorEvaluations from './pages/evaluator/evaluations';
 
 // Faculty Components
-import FacultyLayout from './components/faculty/faculty-layout';
+import FacultyLayout from './components/layout/faculty-layout';
 import FacultyDashboard from './pages/faculty';
+import FacultyProfile from './pages/faculty/profile';
 import FacultyTeams from './pages/faculty/teams';
+import FacultyEvaluation from './pages/faculty/evaluation';
 
 // Public Components
 import Home from './pages/home';
@@ -141,10 +143,26 @@ function App() {
               }
             />
             <Route
+              path="/faculty/profile"
+              element={
+                <ProtectedRoute requiredRole="faculty">
+                  <FacultyProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/faculty/teams"
               element={
                 <ProtectedRoute requiredRole="faculty">
                   <FacultyTeams />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/faculty/evaluation"
+              element={
+                <ProtectedRoute requiredRole="faculty">
+                  <FacultyEvaluation />
                 </ProtectedRoute>
               }
             />

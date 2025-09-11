@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import FacultyLayout from '../../components/faculty/faculty-layout';
+import FacultyLayout from '../../components/layout/faculty-layout';
 import { useAuth } from '../../context/auth-context';
-import API from '../../services/api';
+import { facultyAPI, adminAPI } from '../../lib/api';
 
 function FacultyDashboard() {
   const { user } = useAuth();
@@ -30,9 +30,22 @@ function FacultyDashboard() {
     try {
       setLoading(true);
       
-      // Fetch teams data
-      const teamsResponse = await API.get('/teams');
-      const teamsData = teamsResponse.data?.teams || [];
+      // Fetch teams data - try faculty API first, then admin API as fallback
+      let teamsData = [];
+      try {
+        const teamsResponse = await facultyAPI.getTeams();
+        teamsData = teamsResponse.data?.teams || teamsResponse.data || [];
+      } catch (error) {
+        console.log('Faculty API unavailable, trying admin API...');
+        try {
+          const teamsResponse = await adminAPI.getTeams();
+          teamsData = teamsResponse.data?.teams || teamsResponse.data || [];
+        } catch (adminError) {
+          console.log('Admin API also unavailable, using fallback data');
+          teamsData = [];
+        }
+      }
+      
       setTeams(teamsData);
 
       // Calculate stats
