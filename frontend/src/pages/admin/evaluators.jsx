@@ -7,17 +7,20 @@ import { Badge } from '../../components/ui/badge';
 import { Textarea } from '../../components/ui/textarea';
 import AdminLayout from '../../components/admin/admin-layout';
 import { useToast } from '../../hooks/use-toast';
+import { adminAPI } from '../../lib/api';
 
 function AdminEvaluators() {
   const [evaluators, setEvaluators] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editingEvaluator, setEditingEvaluator] = useState(null);
   const [newEvaluator, setNewEvaluator] = useState({
     name: '',
     email: '',
     organization: '',
     expertise: '',
     experience: '',
+    password: '',
     role: 'internal' // internal or external
   });
 
@@ -28,84 +31,44 @@ function AdminEvaluators() {
 
   const fetchEvaluators = async () => {
     try {
-      // Mock data - replace with actual API call
-      const mockEvaluators = [
-        {
-          id: 1,
-          name: "Dr. Arjun Patel",
-          email: "arjun.patel@techcorp.com",
-          organization: "TechCorp Industries",
-          expertise: "AI/ML, Startup Evaluation",
-          experience: "15+ years",
-          role: "external",
-          status: "active",
-          teamsAssigned: 3,
-          evaluationsCompleted: 3,
-          createdAt: "2025-09-01"
-        },
-        {
-          id: 2,
-          name: "Prof. Kavita Singh",
-          email: "kavita.singh@university.edu",
-          organization: "University Incubator",
-          expertise: "Business Strategy, Innovation",
-          experience: "12+ years",
-          role: "internal",
-          status: "active",
-          teamsAssigned: 3,
-          evaluationsCompleted: 4,
-          createdAt: "2025-09-02"
-        }
-      ];
-      setEvaluators(mockEvaluators);
+      const { data } = await adminAPI.getEvaluators();
+      setEvaluators(Array.isArray(data) ? data : data?.evaluators || []);
     } catch (error) {
       console.error('Error fetching evaluators:', error);
+      setEvaluators([]);
+      addToast({ title: 'Error', description: 'Failed to fetch evaluators.', type: 'destructive' });
     }
   };
 
   const handleCreateEvaluator = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      // Create evaluator account
-      const evaluatorData = {
+      const payload = {
         name: newEvaluator.name,
         email: newEvaluator.email,
-        password: generatePassword(),
-        role: 'evaluator',
-        evaluatorDetails: {
-          organization: newEvaluator.organization,
-          expertise: newEvaluator.expertise,
-          experience: newEvaluator.experience,
-          type: newEvaluator.role
-        }
+        organization: newEvaluator.organization,
+        expertise: newEvaluator.expertise,
+        experience: newEvaluator.experience,
+        password: newEvaluator.password,
+        type: newEvaluator.role
       };
-
-      // This would be actual API calls
-      console.log('Creating evaluator:', evaluatorData);
-      
-      // Send invitation email
-      await sendEvaluatorInvitation(evaluatorData);
-      
-      // Reset form
+      await adminAPI.createEvaluator(payload);
       setNewEvaluator({
         name: '',
         email: '',
         organization: '',
         expertise: '',
         experience: '',
+        password: '',
         role: 'internal'
       });
       setShowCreateForm(false);
-      
-      // Refresh evaluators list
       fetchEvaluators();
-      
-  addToast({ title: 'Success', description: 'Evaluator account created successfully! Invitation sent.', type: 'success' });
+      addToast({ title: 'Success', description: 'Evaluator account created successfully! Invitation sent.', type: 'success' });
     } catch (error) {
       console.error('Error creating evaluator:', error);
-  addToast({ title: 'Error', description: 'Error creating evaluator account. Please try again.', type: 'destructive' });
+      addToast({ title: 'Error', description: error?.response?.data?.message || 'Error creating evaluator account. Please try again.', type: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -137,25 +100,108 @@ function AdminEvaluators() {
 
   const resendInvitation = async (evaluator) => {
     try {
-      await sendEvaluatorInvitation({
-        email: evaluator.email,
-        name: evaluator.name,
-        password: 'resetPassword123', // This would be generated or retrieved
-        evaluatorDetails: { 
-          organization: evaluator.organization,
-          expertise: evaluator.expertise
-        }
-      });
-  addToast({ title: 'Success', description: 'Invitation resent successfully!', type: 'success' });
+      await adminAPI.resendEvaluatorInvitation(evaluator._id || evaluator.id);
+      addToast({ title: 'Success', description: 'Invitation resent successfully!', type: 'success' });
     } catch (error) {
       console.error('Error resending invitation:', error);
-  addToast({ title: 'Error', description: 'Error resending invitation.', type: 'destructive' });
+      addToast({ title: 'Error', description: error?.response?.data?.message || 'Error resending invitation.', type: 'destructive' });
     }
   };
 
   const assignTeams = (evaluatorId) => {
   // This would open a modal to assign teams to evaluator
   addToast({ title: 'Info', description: `Assign teams to evaluator ${evaluatorId}`, type: 'default' });
+  };
+
+  // Add edit and delete functionality for evaluators
+  const handleEditEvaluator = async (evaluator) => {
+    setEditingEvaluator(evaluator);
+    setNewEvaluator({
+      name: evaluator.name,
+      email: evaluator.email,
+      organization: evaluator.organization || '',
+      expertise: Array.isArray(evaluator.expertise) ? evaluator.expertise.join(', ') : evaluator.expertise || '',
+      experience: evaluator.experience || '',
+      password: '',
+      role: evaluator.type || 'internal'
+    });
+    setShowCreateForm(true);
+  };
+
+  const handleUpdateEvaluator = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        name: newEvaluator.name,
+        email: newEvaluator.email,
+        organization: newEvaluator.organization,
+        expertise: newEvaluator.expertise,
+        experience: newEvaluator.experience,
+        type: newEvaluator.role
+      };
+      
+      // Only include password if provided
+      if (newEvaluator.password) {
+        payload.password = newEvaluator.password;
+      }
+
+      await adminAPI.updateEvaluator(editingEvaluator._id, payload);
+      setNewEvaluator({
+        name: '',
+        email: '',
+        organization: '',
+        expertise: '',
+        experience: '',
+        password: '',
+        role: 'internal'
+      });
+      setEditingEvaluator(null);
+      setShowCreateForm(false);
+      fetchEvaluators();
+      addToast({ title: 'Success', description: 'Evaluator updated successfully!', type: 'success' });
+    } catch (error) {
+      console.error('Error updating evaluator:', error);
+      addToast({ title: 'Error', description: error?.response?.data?.message || 'Error updating evaluator.', type: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteEvaluator = async (evaluatorId) => {
+    if (!window.confirm('Delete this evaluator profile and linked user?')) return;
+    try {
+      await adminAPI.deleteEvaluator(evaluatorId);
+      fetchEvaluators();
+      addToast({ title: 'Success', description: 'Evaluator deleted successfully.', type: 'success' });
+    } catch (error) {
+      console.error('Error deleting evaluator:', error);
+      addToast({ title: 'Error', description: error?.response?.data?.message || 'Error deleting evaluator.', type: 'destructive' });
+    }
+  };
+
+  const handleResendInvitation = async (evaluatorId) => {
+    try {
+      await adminAPI.resendEvaluatorInvitation(evaluatorId);
+      addToast({ title: 'Success', description: 'Invitation resent successfully!', type: 'success' });
+    } catch (error) {
+      console.error('Error resending invitation:', error);
+      addToast({ title: 'Error', description: error?.response?.data?.message || 'Error resending invitation.', type: 'destructive' });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEvaluator(null);
+    setNewEvaluator({
+      name: '',
+      email: '',
+      organization: '',
+      expertise: '',
+      experience: '',
+      password: '',
+      role: 'internal'
+    });
+    setShowCreateForm(false);
   };
 
   const containerVariants = {
@@ -221,11 +267,11 @@ function AdminEvaluators() {
                 <div className="p-6 border-b border-gray-700">
                   <h3 className="text-xl font-semibold text-white flex items-center">
                     <span className="text-2xl mr-3">👨‍⚖️</span>
-                    Add New Evaluator
+                    {editingEvaluator ? 'Edit Evaluator' : 'Add New Evaluator'}
                   </h3>
                 </div>
                 <div className="p-6">
-                  <form onSubmit={handleCreateEvaluator} className="space-y-6">
+                  <form onSubmit={editingEvaluator ? handleUpdateEvaluator : handleCreateEvaluator} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -257,6 +303,18 @@ function AdminEvaluators() {
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Password {editingEvaluator ? '(Leave blank to keep current)' : '(Leave blank for auto-generation)'}
+                        </label>
+                        <Input
+                          type="password"
+                          value={newEvaluator.password}
+                          onChange={(e) => setNewEvaluator({...newEvaluator, password: e.target.value})}
+                          placeholder={editingEvaluator ? "Enter new password" : "Auto-generated if empty"}
+                          className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
                           Organization / Company
                         </label>
                         <Input
@@ -266,6 +324,9 @@ function AdminEvaluators() {
                           className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                         />
                       </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
                           Experience Level
@@ -277,6 +338,7 @@ function AdminEvaluators() {
                           className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                         />
                       </div>
+                      <div></div>
                     </div>
 
                     <div>
@@ -327,13 +389,13 @@ function AdminEvaluators() {
                           disabled={loading}
                           className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
                         >
-                          {loading ? '⏳ Creating...' : '✅ Create Account & Send Invitation'}
+                          {loading ? '⏳ Processing...' : editingEvaluator ? '✅ Update Evaluator' : '✅ Create Account & Send Invitation'}
                         </Button>
                       </motion.div>
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowCreateForm(false)}
+                        onClick={editingEvaluator ? handleCancelEdit : () => setShowCreateForm(false)}
                         className="border-gray-600 text-gray-300 hover:bg-gray-700"
                       >
                         Cancel
@@ -401,35 +463,34 @@ function AdminEvaluators() {
                           </div>
                           <div>
                             <span className="text-gray-400 text-sm">Teams Assigned: </span>
-                            <span className="text-cyan-400 text-sm font-semibold">{evaluator.teamsAssigned}</span>
+                            <span className="text-cyan-400 text-sm font-semibold">{evaluator.assignedTeams?.length || 0}</span>
                           </div>
                           <div>
                             <span className="text-gray-400 text-sm">Evaluations Done: </span>
-                            <span className="text-emerald-400 text-sm font-semibold">{evaluator.evaluationsCompleted}</span>
+                            <span className="text-emerald-400 text-sm font-semibold">{evaluator.evaluationsCompleted || 0}</span>
                           </div>
                         </div>
 
                         {evaluator.expertise && (
                           <div className="mb-4">
                             <span className="text-gray-400 text-sm">Expertise: </span>
-                            <p className="text-gray-300 text-sm mt-1">{evaluator.expertise}</p>
+                            <p className="text-gray-300 text-sm mt-1">
+                              {Array.isArray(evaluator.expertise) ? evaluator.expertise.join(', ') : evaluator.expertise}
+                            </p>
                           </div>
                         )}
 
                         <div className="flex gap-2 mb-3">
                           <Button
                             size="sm"
-                            onClick={() => assignTeams(evaluator.id)}
+                            onClick={() => assignTeams(evaluator._id)}
                             className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
                           >
                             🎯 Assign Teams
                           </Button>
-                        </div>
-
-                        <div className="flex gap-2">
                           <Button
                             size="sm"
-                            onClick={() => resendInvitation(evaluator)}
+                            onClick={() => handleResendInvitation(evaluator._id)}
                             className="bg-purple-600 hover:bg-purple-700 text-white flex-1"
                           >
                             📧 Resend Invite
@@ -437,9 +498,18 @@ function AdminEvaluators() {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleEditEvaluator(evaluator)}
                             className="border-gray-600 text-gray-300 hover:bg-gray-700"
                           >
                             ✏️ Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteEvaluator(evaluator._id)}
+                            className="border-red-600 text-red-400 hover:bg-red-700"
+                          >
+                            🗑️ Delete
                           </Button>
                         </div>
                       </motion.div>

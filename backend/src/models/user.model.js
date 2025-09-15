@@ -121,7 +121,6 @@ userSchema.pre('save', async function(next) {
 });
 
 // Indexes for performance
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ status: 1 });
 // Compound unique index: same email can be used for different roles

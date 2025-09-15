@@ -26,6 +26,11 @@ import TeamResults from './pages/team/results';
 
 // Evaluator Components
 import EvaluatorLayout from './components/evaluator/evaluator-layout';
+import EvaluatorDashboard from './pages/evaluator/dashboard';
+import EvaluatorProfile from './pages/evaluator/profile';
+import EvaluationCriteria from './pages/evaluator/criteria';
+import TeamEvaluation from './pages/evaluator/evaluation';
+import TeamEvaluationForm from './pages/evaluator/evaluation-form';
 import EvaluatorTeams from './pages/evaluator/teams';
 import EvaluatorEvaluations from './pages/evaluator/evaluations';
 
@@ -34,6 +39,7 @@ import FacultyLayout from './components/faculty/faculty-layout';
 import FacultyProfile from './pages/faculty/profile';
 import FacultyTeams from './pages/faculty/teams';
 import FacultyEvaluation from './pages/faculty/evaluation';
+import FacultyResults from './pages/faculty/results';
 
 // Public Components
 import Home from './pages/home';
@@ -121,17 +127,76 @@ function App() {
             </Route>
 
             {/* Evaluator Routes */}
+            {/* Evaluator Dashboard (separate from layout) */}
             <Route
               path="/evaluator"
+              element={
+                <ProtectedRoute requiredRole="evaluator">
+                  <EvaluatorDashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Evaluator Profile (separate from layout) */}
+            <Route
+              path="/evaluator/profile"
+              element={
+                <ProtectedRoute requiredRole="evaluator">
+                  <EvaluatorProfile />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Evaluation Criteria (separate from layout) */}
+            <Route
+              path="/evaluator/criteria"
+              element={
+                <ProtectedRoute requiredRole="evaluator">
+                  <EvaluationCriteria />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Team Evaluation Routes */}
+            <Route
+              path="/evaluator/evaluation"
+              element={
+                <ProtectedRoute requiredRole="evaluator">
+                  <TeamEvaluation />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/evaluator/evaluation/:teamId"
+              element={
+                <ProtectedRoute requiredRole="evaluator">
+                  <TeamEvaluationForm />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Other Evaluator Routes with Layout */}
+            <Route
+              path="/evaluator/teams"
               element={
                 <ProtectedRoute requiredRole="evaluator">
                   <EvaluatorLayout />
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="teams" replace />} />
-              <Route path="teams" element={<EvaluatorTeams />} />
-              <Route path="evaluations" element={<EvaluatorEvaluations />} />
+              <Route index element={<EvaluatorTeams />} />
+            </Route>
+            
+            <Route
+              path="/evaluator/evaluations"
+              element={
+                <ProtectedRoute requiredRole="evaluator">
+                  <EvaluatorLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<EvaluatorEvaluations />} />
             </Route>
 
             {/* Faculty Routes */}
@@ -160,6 +225,14 @@ function App() {
               element={
                 <ProtectedRoute requiredRole="faculty">
                   <FacultyEvaluation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/faculty/results"
+              element={
+                <ProtectedRoute requiredRole="faculty">
+                  <FacultyResults />
                 </ProtectedRoute>
               }
             />

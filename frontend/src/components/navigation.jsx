@@ -70,13 +70,14 @@ function Navigation() {
         { path: '/team/results', label: 'Results', icon: '📈' },
       ],
       evaluator: [
-        { path: '/evaluator/teams', label: 'Teams', icon: '🏆' },
+        { path: '/evaluator/profile', label: 'Profile', icon: '👤' },
         { path: '/evaluator/evaluations', label: 'Evaluations', icon: '📝' },
       ],
       faculty: [
-        { path: '/faculty/profile', label: 'Profile', icon: '�' },
+        { path: '/faculty/profile', label: 'Profile', icon: '👤' },
         { path: '/faculty/teams', label: 'Teams', icon: '🎓' },
         { path: '/faculty/evaluation', label: 'Evaluation', icon: '📊' },
+        { path: '/faculty/results', label: 'Results', icon: '🏆' },
       ]
     };
 

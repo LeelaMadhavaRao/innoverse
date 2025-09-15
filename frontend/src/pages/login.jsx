@@ -90,6 +90,9 @@ function Login() {
         // For faculty users, redirect to home with invitation flag
         if (result.user?.role === 'faculty') {
           navigate('/?showInvitation=true');
+        } else if (result.user?.role === 'evaluator') {
+          // For evaluator users, redirect to evaluator home with invitation flag
+          navigate('/evaluator?showInvitation=true');
         } else {
           // Other users go directly to home
           navigate('/');

@@ -171,6 +171,11 @@ export const evaluationAPI = {
   create: (data) => api.post('/evaluations', data),
   update: (id, data) => api.put(`/evaluations/${id}`, data),
   getTeams: () => api.get('/evaluations/teams'),
+  // Evaluator specific endpoints
+  getEvaluatorTeams: () => api.get('/evaluations/evaluator/teams'),
+  getEvaluatorEvaluations: () => api.get('/evaluations/evaluator/evaluations'),
+  getEvaluatorProfile: () => api.get('/evaluations/evaluator/profile'),
+  updateEvaluatorProfile: (data) => api.put('/evaluations/evaluator/profile', data),
 };
 
 // Admin API calls
@@ -201,6 +206,9 @@ export const adminAPI = {
   // Evaluators
   getEvaluators: () => api.get('/admin/evaluators'),
   createEvaluator: (evaluatorData) => api.post('/admin/evaluators', evaluatorData),
+  updateEvaluator: (evaluatorId, data) => api.put(`/admin/evaluators/${evaluatorId}`, data),
+  deleteEvaluator: (evaluatorId) => api.delete(`/admin/evaluators/${evaluatorId}`),
+  resendEvaluatorInvitation: (evaluatorId) => api.post(`/admin/evaluators/${evaluatorId}/resend-invitation`),
   assignTeamsToEvaluator: (evaluatorId, teamIds) => api.post(`/admin/evaluators/${evaluatorId}/assign-teams`, { teamIds }),
   
   // Evaluations

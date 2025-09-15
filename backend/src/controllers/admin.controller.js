@@ -550,84 +550,156 @@ export const getEvaluators = asyncHandler(async (req, res) => {
 // @route   POST /api/admin/evaluators
 // @access  Private/Admin
 export const createEvaluator = asyncHandler(async (req, res) => {
-  const { name, email, organization, designation, expertise, experience, type } = req.body;
+  console.log('🆕 === EVALUATOR CREATION DEBUG ===');
+  console.log('📧 Request body:', JSON.stringify(req.body, null, 2));
+  console.log('👤 Admin user:', req.user ? req.user._id : 'Not authenticated');
 
-  // Check if evaluator with this email already exists (same email can exist for different roles)
-  const existingUser = await User.findOne({ email, role: 'evaluator' });
-  if (existingUser) {
+  const { name, email, organization, designation, expertise, experience, type, password: customPassword } = req.body;
+
+  // Validate required fields
+  if (!name || !email) {
+    console.log('❌ Missing required fields:', { name: !!name, email: !!email });
     res.status(400);
-    throw new Error('Evaluator account with this email already exists');
+    throw new Error('Name and email are required');
   }
 
-  // Generate password
-  const password = crypto.randomBytes(8).toString('hex');
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    console.log('❌ Invalid email format:', email);
+    res.status(400);
+    throw new Error('Please provide a valid email address');
+  }
 
-  // Create user account
-  const user = await User.create({
-    name,
-    email,
-    password,
-    role: 'evaluator',
-    createdBy: req.user._id
-  });
-
-  // Create evaluator profile
-  const evaluator = await Evaluator.create({
-    name,
-    email,
-    userId: user._id,
-    organization,
-    designation,
-    expertise: expertise ? expertise.split(',').map(e => e.trim()) : [],
-    experience,
-    type,
-    status: 'active',
-    evaluationCriteria: {
-      innovation: { weight: 20, maxScore: 100 },
-      technical: { weight: 20, maxScore: 100 },
-      business: { weight: 20, maxScore: 100 },
-      presentation: { weight: 20, maxScore: 100 },
-      feasibility: { weight: 20, maxScore: 100 }
-    }
-  });
-
-  // Link evaluator profile to user
-  user.evaluatorProfile = evaluator._id;
-  await user.save();
-
-  // Send invitation email
   try {
-    await getEmailService().sendEvaluatorInvitation({
-      evaluatorData: {
+    // Check if evaluator with this email already exists for evaluator role only
+    console.log('🔍 Checking for existing evaluator with email:', email);
+    const existingUser = await User.findOne({ email, role: 'evaluator' });
+    if (existingUser) {
+      console.log('❌ Evaluator already exists with this email:', existingUser.name);
+      res.status(400);
+      throw new Error('Evaluator account with this email already exists');
+    }
+
+    // Check if email exists with different role (this should be allowed)
+    const userWithSameEmail = await User.findOne({ email });
+    if (userWithSameEmail) {
+      console.log('ℹ️ User with this email exists in role:', userWithSameEmail.role);
+      console.log('✅ Same email with different role is allowed');
+    }
+
+    // Also check evaluator collection directly
+    const existingEvaluator = await Evaluator.findOne({ email });
+    if (existingEvaluator) {
+      console.log('❌ Evaluator profile already exists with this email');
+      res.status(400);
+      throw new Error('Evaluator profile with this email already exists');
+    }
+
+    // Generate password
+    const password = customPassword || crypto.randomBytes(8).toString('hex');
+    console.log('🔑 Generated/Custom password for evaluator:', customPassword ? 'Custom password provided' : 'Auto-generated');
+
+    // Create user account with detailed error handling
+    console.log('👤 Creating user account...');
+    let user;
+    try {
+      user = await User.create({
         name,
         email,
-        organization,
-        expertise: expertise,
-        type
-      },
-      credentials: {
-        password
+        password,
+        role: 'evaluator',
+        createdBy: req.user._id
+      });
+      console.log('✅ User created:', user._id);
+    } catch (userCreateError) {
+      console.error('❌ User creation failed:', userCreateError.message);
+      if (userCreateError.code === 11000) {
+        // MongoDB duplicate key error
+        if (userCreateError.message.includes('email_1')) {
+          res.status(400);
+          throw new Error('Email already exists. Same email can be used for different roles, but there may be a database index conflict.');
+        }
+        res.status(400);
+        throw new Error('Duplicate key error: ' + userCreateError.message);
+      }
+      throw userCreateError;
+    }
+
+    // Create evaluator profile
+    console.log('👨‍⚖️ Creating evaluator profile...');
+    const evaluator = await Evaluator.create({
+      name,
+      email,
+      userId: user._id,
+      organization: organization || '',
+      designation: designation || '',
+      expertise: expertise ? expertise.split(',').map(e => e.trim()) : [],
+      experience: experience || '',
+      type: type || 'internal',
+      status: 'active',
+      evaluationCriteria: {
+        innovation: { weight: 20, maxScore: 100 },
+        technical: { weight: 20, maxScore: 100 },
+        business: { weight: 20, maxScore: 100 },
+        presentation: { weight: 20, maxScore: 100 },
+        feasibility: { weight: 20, maxScore: 100 }
+      }
+    });
+    console.log('✅ Evaluator profile created:', evaluator._id);
+
+    // Link evaluator profile to user
+    console.log('🔗 Linking evaluator profile to user...');
+    user.evaluatorProfile = evaluator._id;
+    await user.save();
+    console.log('✅ Evaluator profile linked to user');
+
+    // Send invitation email
+    try {
+      console.log('📧 Sending evaluator invitation email...');
+      await getEmailService().sendEvaluatorInvitation({
+        evaluatorData: {
+          name,
+          email,
+          organization: organization || '',
+          expertise: expertise || '',
+          type: type || 'internal'
+        },
+        credentials: {
+          password
+        }
+      });
+
+      // Mark invitation as sent
+      evaluator.invitationSent = true;
+      evaluator.invitationSentAt = new Date();
+      await evaluator.save();
+      console.log('✅ Evaluator invitation email sent successfully');
+    } catch (emailError) {
+      console.error('❌ Failed to send evaluator invitation:', emailError);
+      // Don't throw error for email failure - evaluator creation was successful
+    }
+
+    console.log('🎉 Evaluator creation completed successfully');
+    res.status(201).json({
+      message: 'Evaluator created successfully and invitation sent',
+      evaluator,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
       }
     });
 
-    // Mark invitation as sent
-    evaluator.invitationSent = true;
-    evaluator.invitationSentAt = new Date();
-    await evaluator.save();
-  } catch (emailError) {
-    console.error('Failed to send evaluator invitation:', emailError);
+  } catch (error) {
+    console.error('❌ Evaluator creation failed:', error.message);
+    console.error('❌ Stack trace:', error.stack);
+    res.status(500);
+    throw new Error(`Failed to create evaluator account: ${error.message}`);
   }
 
-  res.status(201).json({
-    message: 'Evaluator created successfully and invitation sent',
-    evaluator,
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }
-  });
+  console.log('🆕 === END EVALUATOR CREATION DEBUG ===\n');
 });
 
 // @desc    Assign teams to evaluator
@@ -664,6 +736,142 @@ export const assignTeamsToEvaluator = asyncHandler(async (req, res) => {
     message: `${teamIds.length} teams assigned to evaluator successfully`,
     evaluator
   });
+});
+
+// @desc    Update evaluator
+// @route   PUT /api/admin/evaluators/:id
+// @access  Private/Admin
+export const updateEvaluator = asyncHandler(async (req, res) => {
+  const { name, email, organization, designation, expertise, experience, type, status, password } = req.body;
+
+  const evaluator = await Evaluator.findById(req.params.id).populate('userId');
+  if (!evaluator) {
+    res.status(404);
+    throw new Error('Evaluator not found');
+  }
+
+  // Check if email is being changed and if it's already in use for evaluator role
+  if (email && email !== evaluator.email) {
+    const existingUser = await User.findOne({ 
+      email, 
+      role: 'evaluator',
+      _id: { $ne: evaluator.userId._id }
+    });
+    if (existingUser) {
+      res.status(400);
+      throw new Error('Email already in use by another evaluator');
+    }
+  }
+
+  // Update evaluator profile
+  evaluator.name = name || evaluator.name;
+  evaluator.email = email || evaluator.email;
+  evaluator.organization = organization || evaluator.organization;
+  evaluator.designation = designation || evaluator.designation;
+  evaluator.expertise = expertise ? expertise.split(',').map(e => e.trim()) : evaluator.expertise;
+  evaluator.experience = experience || evaluator.experience;
+  evaluator.type = type || evaluator.type;
+  evaluator.status = status || evaluator.status;
+
+  await evaluator.save();
+
+  // Update user account
+  if (evaluator.userId) {
+    evaluator.userId.name = name || evaluator.userId.name;
+    evaluator.userId.email = email || evaluator.userId.email;
+    evaluator.userId.status = status || evaluator.userId.status;
+    
+    // Update password if provided
+    if (password && password.trim()) {
+      evaluator.userId.password = password;
+      console.log('🔑 Password updated for evaluator:', evaluator.name);
+    }
+    
+    await evaluator.userId.save();
+  }
+
+  res.json({
+    message: 'Evaluator updated successfully',
+    evaluator
+  });
+});
+
+// @desc    Delete evaluator
+// @route   DELETE /api/admin/evaluators/:id
+// @access  Private/Admin
+export const deleteEvaluator = asyncHandler(async (req, res) => {
+  const evaluator = await Evaluator.findById(req.params.id).populate('userId');
+  if (!evaluator) {
+    res.status(404);
+    throw new Error('Evaluator not found');
+  }
+
+  // Check if evaluator has any assigned teams or completed evaluations
+  if (evaluator.assignedTeams.length > 0 || evaluator.evaluationsCompleted > 0) {
+    res.status(400);
+    throw new Error('Cannot delete evaluator with assigned teams or completed evaluations. Deactivate instead.');
+  }
+
+  // Delete user account first
+  if (evaluator.userId) {
+    await User.findByIdAndDelete(evaluator.userId._id);
+  }
+
+  // Delete evaluator profile
+  await Evaluator.findByIdAndDelete(req.params.id);
+
+  res.json({
+    message: 'Evaluator deleted successfully'
+  });
+});
+
+// @desc    Resend evaluator invitation
+// @route   POST /api/admin/evaluators/:id/resend-invitation
+// @access  Private/Admin
+export const resendEvaluatorInvitation = asyncHandler(async (req, res) => {
+  const evaluator = await Evaluator.findById(req.params.id).populate('userId');
+  if (!evaluator) {
+    res.status(404);
+    throw new Error('Evaluator not found');
+  }
+
+  // Generate new password
+  const newPassword = crypto.randomBytes(8).toString('hex');
+
+  // Update user password
+  if (evaluator.userId) {
+    evaluator.userId.password = newPassword;
+    await evaluator.userId.save();
+  }
+
+  // Send invitation email
+  try {
+    await getEmailService().sendEvaluatorInvitation({
+      evaluatorData: {
+        name: evaluator.name,
+        email: evaluator.email,
+        organization: evaluator.organization,
+        expertise: evaluator.expertise.join(', '),
+        type: evaluator.type
+      },
+      credentials: {
+        password: newPassword
+      }
+    });
+
+    // Update invitation status
+    evaluator.invitationSent = true;
+    evaluator.invitationSentAt = new Date();
+    await evaluator.save();
+
+    res.json({
+      message: 'Invitation resent successfully'
+    });
+  } catch (emailError) {
+    console.error('Failed to resend evaluator invitation:', emailError);
+    res.status(500);
+    throw new Error('Failed to send invitation email');
+  }
 });
 
 // ==================== EVALUATION MANAGEMENT ====================
@@ -1323,7 +1531,10 @@ export const resetAllLaunches = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error in complete bulk reset:', error);
-    res.status(500);
-    throw new Error('Failed to reset all launches');
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset all launches',
+      error: error.message
+    });
   }
 });

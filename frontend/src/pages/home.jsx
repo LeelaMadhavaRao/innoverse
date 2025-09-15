@@ -477,9 +477,9 @@ function Home() {
           >
             {[
               { number: "10", label: "Teams", icon: "👥" },
-              { number: "2", label: "Days", icon: "📅" },
+              { number: "2", label: "Events", icon: "📅" },
               { number: "3", label: "Evaluators", icon: "🏆" },
-              { number: "₹50K", label: "Momentum Distribution", icon: "💰" }
+              { number: "Winners", label: "Momentum Distribution", icon: "💰" }
             ].map((stat, index) => (
               <motion.div
                 key={index}
@@ -768,8 +768,8 @@ function Home() {
                   <span className="text-3xl">🚀</span>
                 </div>
                 <div>
-                  <h3 className="text-3xl font-bold text-emerald-400">Day 1 - Innoverse</h3>
-                  <p className="text-gray-400">September 17, 2025</p>
+                  <h3 className="text-3xl font-bold text-emerald-400">Event 1 - Innoverse</h3>
+                  <p className="text-gray-400">September 18, 2025</p>
                 </div>
               </div>
               
@@ -819,8 +819,8 @@ function Home() {
                   <span className="text-3xl">🍽️</span>
                 </div>
                 <div>
-                  <h3 className="text-3xl font-bold text-orange-400">Day 2 - Potluck Lunch</h3>
-                  <p className="text-gray-400">September 17, 2025</p>
+                  <h3 className="text-3xl font-bold text-orange-400">Event 2 - Potluck Lunch</h3>
+                  <p className="text-gray-400">September 18, 2025</p>
                 </div>
               </div>
               
@@ -1048,7 +1048,7 @@ function Home() {
             
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {[
-                { name: "Dr. N Gopi Krishna Murthy", designation: "HOD, CSIT" },
+                { name: "Dr. N Gopala Krishna Murthy", designation: "HOD, CSIT" },
                 { name: "Dr. M Suresh Babu", designation: "HOD, CSD" }
               ].map((hod, index) => (
                 <motion.div
