@@ -4,7 +4,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { useToast } from '../../hooks/use-toast';
-import { adminAPI, evaluationAPI } from '../../lib/api';
+import { adminAPI } from '../../lib/api';
 
 function AdminEvaluations() {
   const { addToast } = useToast();
