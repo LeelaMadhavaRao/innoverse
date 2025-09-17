@@ -192,12 +192,10 @@ function App() {
               path="/evaluator/evaluations"
               element={
                 <ProtectedRoute requiredRole="evaluator">
-                  <EvaluatorLayout />
+                  <EvaluatorEvaluations />
                 </ProtectedRoute>
               }
-            >
-              <Route index element={<EvaluatorEvaluations />} />
-            </Route>
+            />
 
             {/* Faculty Routes */}
             <Route

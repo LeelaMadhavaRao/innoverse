@@ -171,10 +171,10 @@ export const evaluationAPI = {
   create: (data) => api.post('/evaluations', data),
   update: (id, data) => api.put(`/evaluations/${id}`, data),
   getTeams: () => api.get('/evaluations/teams'),
-  // Evaluator specific endpoints
-  getEvaluatorTeams: () => api.get('/evaluations/evaluator/teams'),
-  getEvaluatorEvaluations: () => api.get('/evaluations/evaluator/evaluations'),
-  getEvaluatorProfile: () => api.get('/evaluations/evaluator/profile'),
+  // Evaluator specific endpoints (temporarily using admin routes)
+  getEvaluatorTeams: () => api.get('/admin/evaluator/teams'),
+  getEvaluatorEvaluations: () => api.get('/admin/evaluator/evaluations'),
+  getEvaluatorProfile: () => api.get('/admin/evaluator/profile'),
   updateEvaluatorProfile: (data) => api.put('/evaluations/evaluator/profile', data),
 };
 
