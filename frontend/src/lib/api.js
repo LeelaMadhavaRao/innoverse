@@ -172,10 +172,38 @@ export const evaluationAPI = {
   update: (id, data) => api.put(`/evaluations/${id}`, data),
   getTeams: () => api.get('/evaluations/teams'),
   // Evaluator specific endpoints (temporarily using admin routes)
-  getEvaluatorTeams: () => api.get('/admin/evaluator/teams'),
-  getEvaluatorEvaluations: () => api.get('/admin/evaluator/evaluations'),
-  getEvaluatorProfile: () => api.get('/admin/evaluator/profile'),
+  getEvaluatorTeams: async () => {
+    try {
+      console.log('🔍 Fetching evaluator teams...');
+      const response = await api.get('/admin/evaluator/teams', { 
+        timeout: 60000, // 60 second timeout for this specific endpoint
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
+      console.log('✅ Successfully fetched evaluator teams:', response.data);
+      return response;
+    } catch (error) {
+      console.error('❌ API Error: GET /admin/evaluator/teams -', error.message);
+      
+      // If it's a timeout, provide a more specific error message
+      if (error.code === 'ECONNABORTED') {
+        throw new Error('The server is taking too long to respond. Please try again later.');
+      }
+      
+      // If it's a network error, provide helpful message
+      if (error.message === 'Network Error') {
+        throw new Error('Unable to connect to the server. Please check your internet connection.');
+      }
+      
+      throw error;
+    }
+  },
+  getEvaluatorEvaluations: () => api.get('/admin/evaluator/evaluations', { timeout: 45000 }),
+  getEvaluatorProfile: () => api.get('/admin/evaluator/profile', { timeout: 30000 }),
   updateEvaluatorProfile: (data) => api.put('/evaluations/evaluator/profile', data),
+  getTeamForEvaluation: (teamId) => api.get(`/teams/${teamId}`),
+  submitEvaluation: (data) => api.post('/evaluations', data),
 };
 
 // Admin API calls

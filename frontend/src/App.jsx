@@ -176,6 +176,15 @@ function App() {
               }
             />
             
+            <Route
+              path="/evaluator/evaluation/form/:teamId"
+              element={
+                <ProtectedRoute requiredRole="evaluator">
+                  <TeamEvaluationForm />
+                </ProtectedRoute>
+              }
+            />
+            
             {/* Other Evaluator Routes with Layout */}
             <Route
               path="/evaluator/teams"

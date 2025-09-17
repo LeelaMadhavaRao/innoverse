@@ -21,6 +21,8 @@ const TeamEvaluation = () => {
     const fetchTeams = async () => {
       try {
         setLoading(true);
+        console.log('🔄 Fetching evaluator teams...');
+        
         const response = await evaluationAPI.getEvaluatorTeams();
         const { evaluator, teams: teamsList } = response.data;
         
@@ -29,23 +31,58 @@ const TeamEvaluation = () => {
         
         console.log('✅ Teams loaded:', teamsList.length, 'teams');
         console.log('✅ Evaluator info:', evaluator.name);
+        
+        addToast({
+          title: 'Success',
+          description: `Loaded ${teamsList.length} teams for evaluation`,
+          variant: 'default'
+        });
       } catch (error) {
         console.error('❌ Failed to load teams:', error);
+        
+        let errorMessage = 'Failed to load teams. Please try again.';
+        
+        if (error.message.includes('timeout')) {
+          errorMessage = 'The server is taking too long to respond. Please check your connection and try again.';
+        } else if (error.message.includes('Network Error')) {
+          errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+        } else if (error.response?.status === 401) {
+          errorMessage = 'Your session has expired. Please log in again.';
+        } else if (error.response?.status === 403) {
+          errorMessage = 'You do not have permission to access this resource.';
+        }
+        
         addToast({
-          title: 'Error',
-          description: 'Failed to load assigned teams. Please try again.',
+          title: 'Error Loading Teams',
+          description: errorMessage,
           variant: 'destructive'
         });
         
         // Fallback to empty state
         setTeams([]);
-        setEvaluatorInfo({ name: 'Evaluator', totalAssigned: 0, completed: 0, remaining: 0 });
+        setEvaluatorInfo({ 
+          name: 'Evaluator', 
+          totalAvailable: 0, 
+          completed: 0, 
+          remaining: 0 
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchTeams();
+
+    // Add event listener to refresh data when returning to this page
+    const handleFocus = () => {
+      fetchTeams();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [addToast]);
 
   const getStatusColor = (status) => {

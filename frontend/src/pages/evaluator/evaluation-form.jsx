@@ -5,6 +5,8 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { useToast } from '../../hooks/use-toast';
+import Navigation from '../../components/Navigation';
+import { evaluationAPI } from '../../lib/api';
 
 const TeamEvaluationForm = () => {
   const { teamId } = useParams();
@@ -14,23 +16,38 @@ const TeamEvaluationForm = () => {
   const isEditing = searchParams.get('edit') === 'true';
   
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   
   // Mock team data - in real app this would come from API
-  const [teamData] = useState({
-    id: parseInt(teamId),
-    teamName: "Tech Innovators",
-    teamLeader: { name: "John Smith", email: "john@example.com" },
-    teamMembers: ["John Smith", "Sarah Johnson", "Mike Chen", "Lisa Davis"],
-    projectTitle: "AI-Powered Learning Platform",
-    description: "An innovative platform that uses AI to personalize learning experiences for students, adapting to individual learning styles and providing real-time feedback.",
-    projectDetails: {
-      technology: "React, Node.js, Python, TensorFlow",
-      duration: "6 months",
-      targetUsers: "Students, Educators",
-      marketSize: "$50B education technology market"
+  const [teamData, setTeamData] = useState(null);
+
+  useEffect(() => {
+    // Load real team data from API
+    const loadTeamData = async () => {
+      try {
+        setPageLoading(true);
+        
+        // Fetch team data from API
+        const response = await evaluationAPI.getTeamForEvaluation(teamId);
+        setTeamData(response.data);
+        
+      } catch (error) {
+        console.error('Error loading team data:', error);
+        addToast({
+          title: 'Error',
+          description: 'Failed to load team data. Please try again.',
+          type: 'destructive'
+        });
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    if (teamId) {
+      loadTeamData();
     }
-  });
+  }, [teamId, addToast]);
 
   const [scores, setScores] = useState({
     problemStatement: { score: '', feedback: '' },
@@ -158,8 +175,20 @@ const TeamEvaluationForm = () => {
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Submit evaluation via API
+      const evaluationData = {
+        teamId,
+        scores: Object.entries(scores).map(([criteriaId, data]) => ({
+          criteria: criteriaId,
+          score: parseInt(data.score),
+          feedback: data.feedback,
+          maxScore: criteria.find(c => c.id === criteriaId)?.maxScore || 0
+        })),
+        totalScore,
+        isEditing
+      };
+
+      await evaluationAPI.submitEvaluation(evaluationData);
       
       addToast({
         title: 'Success',
@@ -185,8 +214,40 @@ const TeamEvaluationForm = () => {
 
   const progress = ((currentStep + 1) / criteria.length) * 100;
 
+  if (pageLoading) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-lg text-gray-600">Loading evaluation form...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!teamData) {
+    return (
+      <>
+        <Navigation />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg text-gray-600">Team not found</p>
+            <Button onClick={() => navigate('/evaluator/evaluation')} className="mt-4">
+              Back to Teams
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <>
+      <Navigation />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 pt-24">
       {/* Header */}
       <div className="bg-white shadow-lg border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -434,6 +495,7 @@ const TeamEvaluationForm = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
