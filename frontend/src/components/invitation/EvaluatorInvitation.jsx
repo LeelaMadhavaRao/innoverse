@@ -246,7 +246,7 @@ const EvaluatorInvitation = ({ evaluatorData, onComplete }) => {
 
       {/* Main Content */}
       <div className="flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-4xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
             {currentStage === 'entrance' && (
               <motion.div
@@ -356,9 +356,9 @@ const EvaluatorInvitation = ({ evaluatorData, onComplete }) => {
               variants={invitationVariants}
               initial="hidden"
               animate="visible"
-              className="max-w-2xl w-full"
+              className="w-full max-w-2xl mx-auto"
             >
-              <Card className={`p-8 bg-gradient-to-br ${template.bgGradient} border-2 ${template.borderGlow} backdrop-blur-sm`}>
+              <Card className={`p-4 sm:p-6 lg:p-8 bg-gradient-to-br ${template.bgGradient} border-2 ${template.borderGlow} backdrop-blur-sm`}>
                 <motion.div
                   className="text-center"
                   initial={{ opacity: 0, y: 20 }}
@@ -367,7 +367,7 @@ const EvaluatorInvitation = ({ evaluatorData, onComplete }) => {
                 >
                   {/* Header with Icon */}
                   <motion.div
-                    className="text-6xl mb-4"
+                    className="text-4xl sm:text-5xl lg:text-6xl mb-4"
                     animate={{ 
                       rotateY: [0, 360],
                       scale: [1, 1.1, 1]
@@ -388,8 +388,8 @@ const EvaluatorInvitation = ({ evaluatorData, onComplete }) => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.5 }}
                   >
-                    <h1 className="text-3xl font-bold mb-2">{template.title}</h1>
-                    <p className={`text-lg font-semibold ${template.accentColor} mb-4`}>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-2">{template.title}</h1>
+                    <p className={`text-base sm:text-lg font-semibold ${template.accentColor} mb-4`}>
                       {template.greeting}
                     </p>
                   </motion.div>

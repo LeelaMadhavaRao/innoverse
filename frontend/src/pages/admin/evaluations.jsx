@@ -4,6 +4,7 @@ import { Card } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { useToast } from '../../hooks/use-toast';
+import { adminAPI, evaluationAPI } from '../../lib/api';
 import AdminLayout from '../../components/admin/admin-layout';
 
 function AdminEvaluations() {
@@ -12,102 +13,113 @@ function AdminEvaluations() {
   const [selectedEvaluator, setSelectedEvaluator] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [resultsReleased, setResultsReleased] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [evaluators, setEvaluators] = useState([]);
+  const [teams, setTeams] = useState([]);
 
-  // Mock data - in real app this would come from API
-  const [evaluators] = useState([
-    {
-      id: 1,
-      name: "Dr. Arjun Patel",
-      email: "arjun@example.com",
-      organization: "Tech Institute",
-      type: "academic",
-      teamsEvaluated: 8,
-      totalTeams: 12,
-      avgScore: 82.5,
-      completionRate: 67
-    },
-    {
-      id: 2,
-      name: "Prof. Kavita Singh",
-      email: "kavita@example.com", 
-      organization: "Innovation Lab",
-      type: "industry",
-      teamsEvaluated: 12,
-      totalTeams: 12,
-      avgScore: 78.9,
-      completionRate: 100
-    },
-    {
-      id: 3,
-      name: "Dr. Ravi Kumar",
-      email: "ravi@example.com",
-      organization: "Startup Accelerator",
-      type: "external",
-      teamsEvaluated: 5,
-      totalTeams: 12,
-      avgScore: 85.2,
-      completionRate: 42
-    }
-  ]);
+  // Fetch evaluators and evaluation data
+  useEffect(() => {
+    const fetchEvaluationData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch evaluators
+        const evaluatorsResponse = await adminAPI.getEvaluators();
+        const evaluatorsData = evaluatorsResponse.data;
+        
+        // Fetch teams 
+        const teamsResponse = await adminAPI.getTeams();
+        const teamsData = teamsResponse.data;
+        
+        // Fetch evaluations overview
+        const evaluationsResponse = await adminAPI.getEvaluations();
+        const evaluationsData = evaluationsResponse.data;
+        
+        // Process evaluator data with evaluation statistics
+        const processedEvaluators = evaluatorsData.map(evaluator => {
+          const evaluatorEvaluations = evaluationsData.filter(evaluation => evaluation.evaluatorId === evaluator._id);
+          const totalTeams = teamsData.length;
+          const teamsEvaluated = evaluatorEvaluations.length;
+          const avgScore = teamsEvaluated > 0 
+            ? evaluatorEvaluations.reduce((sum, evaluation) => sum + evaluation.totalScore, 0) / teamsEvaluated 
+            : 0;
+          
+          return {
+            id: evaluator._id,
+            name: evaluator.name,
+            email: evaluator.email,
+            organization: evaluator.organization,
+            type: evaluator.type || 'academic',
+            teamsEvaluated,
+            totalTeams,
+            avgScore: Math.round(avgScore * 10) / 10,
+            completionRate: Math.round((teamsEvaluated / totalTeams) * 100)
+          };
+        });
+        
+        setEvaluators(processedEvaluators);
+        setTeams(teamsData);
+        
+      } catch (error) {
+        console.error('Error fetching evaluation data:', error);
+        addToast({
+          title: 'Error',
+          description: 'Failed to load evaluation data. Using sample data.',
+          type: 'destructive'
+        });
+        
+        // Fallback to sample data
+        setEvaluators([
+          {
+            id: 1,
+            name: "Dr. Arjun Patel",
+            email: "arjun@example.com",
+            organization: "Tech Institute",
+            type: "academic",
+            teamsEvaluated: 8,
+            totalTeams: 12,
+            avgScore: 82.5,
+            completionRate: 67
+          },
+          {
+            id: 2,
+            name: "Prof. Kavita Singh",
+            email: "kavita@example.com", 
+            organization: "Innovation Lab",
+            type: "industry",
+            teamsEvaluated: 12,
+            totalTeams: 12,
+            avgScore: 78.9,
+            completionRate: 100
+          },
+          {
+            id: 3,
+            name: "Dr. Ravi Kumar",
+            email: "ravi@example.com",
+            organization: "Startup Accelerator",
+            type: "external",
+            teamsEvaluated: 5,
+            totalTeams: 12,
+            avgScore: 85.2,
+            completionRate: 42
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const [teams] = useState([
-    {
-      id: 1,
-      teamName: "AI Innovators",
-      projectTitle: "Smart Learning Platform",
-      evaluations: [
-        { evaluatorId: 1, evaluatorName: "Dr. Arjun Patel", status: "completed", score: 85, submittedAt: "2025-09-14" },
-        { evaluatorId: 2, evaluatorName: "Prof. Kavita Singh", status: "completed", score: 82, submittedAt: "2025-09-14" },
-        { evaluatorId: 3, evaluatorName: "Dr. Ravi Kumar", status: "not_started", score: null, submittedAt: null }
-      ],
-      averageScore: 83.5,
-      totalScore: 250.5,
-      rank: 2
-    },
-    {
-      id: 2,
-      teamName: "EcoTech Solutions",
-      projectTitle: "Smart Waste Management",
-      evaluations: [
-        { evaluatorId: 1, evaluatorName: "Dr. Arjun Patel", status: "completed", score: 92, submittedAt: "2025-09-14" },
-        { evaluatorId: 2, evaluatorName: "Prof. Kavita Singh", status: "completed", score: 89, submittedAt: "2025-09-15" },
-        { evaluatorId: 3, evaluatorName: "Dr. Ravi Kumar", status: "completed", score: 88, submittedAt: "2025-09-15" }
-      ],
-      averageScore: 89.7,
-      totalScore: 269.0,
-      rank: 1
-    },
-    {
-      id: 3,
-      teamName: "HealthTech Warriors",
-      projectTitle: "Remote Health Monitor",
-      evaluations: [
-        { evaluatorId: 1, evaluatorName: "Dr. Arjun Patel", status: "completed", score: 78, submittedAt: "2025-09-13" },
-        { evaluatorId: 2, evaluatorName: "Prof. Kavita Singh", status: "in_progress", score: null, submittedAt: null },
-        { evaluatorId: 3, evaluatorName: "Dr. Ravi Kumar", status: "not_started", score: null, submittedAt: null }
-      ],
-      averageScore: 78.0,
-      totalScore: 78.0,
-      rank: 4
-    },
-    {
-      id: 4,
-      teamName: "FinTech Pioneers", 
-      projectTitle: "Blockchain Payment System",
-      evaluations: [
-        { evaluatorId: 1, evaluatorName: "Dr. Arjun Patel", status: "completed", score: 86, submittedAt: "2025-09-14" },
-        { evaluatorId: 2, evaluatorName: "Prof. Kavita Singh", status: "completed", score: 84, submittedAt: "2025-09-14" },
-        { evaluatorId: 3, evaluatorName: "Dr. Ravi Kumar", status: "completed", score: 81, submittedAt: "2025-09-15" }
-      ],
-      averageScore: 83.7,
-      totalScore: 251.0,
-      rank: 3
-    }
-  ]);
+    fetchEvaluationData();
+  }, [addToast]);
 
   const getEvaluatorTeams = (evaluatorId) => {
     return teams.map(team => {
-      const evaluation = team.evaluations.find(evaluation => evaluation.evaluatorId === evaluatorId);
+      // Find evaluations for this team by this evaluator
+      const evaluation = team.evaluations?.find(evaluation => evaluation.evaluatorId === evaluatorId) || {
+        status: 'not_started',
+        score: null,
+        submittedAt: null
+      };
       return {
         ...team,
         evaluation
@@ -150,8 +162,9 @@ function AdminEvaluations() {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setLoading(true);
+      // Call the release results API
+      await adminAPI.releaseResults();
       setResultsReleased(true);
       addToast({
         title: 'Results Released!',
@@ -159,11 +172,14 @@ function AdminEvaluations() {
         type: 'success'
       });
     } catch (error) {
+      console.error('Error releasing results:', error);
       addToast({
         title: 'Error',
-        description: 'Failed to release results. Please try again.',
+        description: error.response?.data?.message || 'Failed to release results. Please try again.',
         type: 'destructive'
       });
+    } finally {
+      setLoading(false);
     }
   };
 

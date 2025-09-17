@@ -5,6 +5,7 @@ import { Badge } from '../../components/ui/badge';
 import { useToast } from '../../hooks/use-toast';
 import { evaluationAPI } from '../../lib/api';
 import { Calendar, Users, Trophy, Star, FileText, ClipboardCheck } from 'lucide-react';
+import Navigation from '../../components/navigation';
 
 export default function EvaluatorEvaluations() {
   const { addToast } = useToast();
@@ -80,12 +81,13 @@ export default function EvaluatorEvaluations() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      <Navigation />
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-teal-900/30 to-cyan-900/30"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-6 py-8">
+      <div className="relative z-10 container mx-auto px-6 py-8 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

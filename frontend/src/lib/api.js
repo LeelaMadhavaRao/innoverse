@@ -214,6 +214,7 @@ export const adminAPI = {
   // Evaluations
   getEvaluations: () => api.get('/admin/evaluations'),
   getTeamEvaluations: (teamId) => api.get(`/admin/evaluations/team/${teamId}`),
+  releaseResults: () => api.post('/admin/evaluations/release-results'),
   
   // Emails
   getEmails: () => api.get('/admin/emails'),
