@@ -19,11 +19,32 @@ export default function EvaluatorEvaluations() {
         setEvaluationsData(response.data);
       } catch (error) {
         console.error('Error fetching evaluations:', error);
-        addToast({
-          title: 'Error',
-          description: 'Failed to fetch evaluations. Please try again.',
-          variant: 'destructive',
-        });
+        
+        // Provide helpful fallback data based on error type
+        if (error.response?.status === 403) {
+          addToast({
+            title: 'Access Restricted',
+            description: 'Backend deployment is in progress. Please try again later.',
+            variant: 'destructive',
+          });
+          
+          // Set fallback data for 403 error
+          setEvaluationsData({
+            evaluator: {
+              name: 'Evaluator',
+              email: 'evaluator@example.com',
+              organization: 'Loading...'
+            },
+            evaluations: [],
+            totalEvaluations: 0
+          });
+        } else {
+          addToast({
+            title: 'Error',
+            description: 'Failed to fetch evaluations. Please try again.',
+            variant: 'destructive',
+          });
+        }
       } finally {
         setLoading(false);
       }

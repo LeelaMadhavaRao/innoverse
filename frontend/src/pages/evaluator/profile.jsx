@@ -59,11 +59,21 @@ const EvaluatorProfile = () => {
         console.log('✅ Evaluator profile loaded:', profile.name);
       } catch (error) {
         console.error('❌ Failed to load evaluator profile:', error);
-        addToast({
-          title: 'Error',
-          description: 'Failed to load profile data. Using fallback data.',
-          variant: 'destructive'
-        });
+        
+        // Provide specific error messages based on error type
+        if (error.response?.status === 403) {
+          addToast({
+            title: 'Access Restricted',
+            description: 'Backend deployment is in progress. Using local profile data.',
+            variant: 'destructive'
+          });
+        } else {
+          addToast({
+            title: 'Error',
+            description: 'Failed to load profile data. Using fallback data.',
+            variant: 'destructive'
+          });
+        }
         
         // Fallback to user data if available
         if (user) {
